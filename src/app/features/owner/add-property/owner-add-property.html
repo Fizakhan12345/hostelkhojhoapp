@@ -1,0 +1,391 @@
+<!-- owner-add-property.html -->
+<ng-container *ngIf="loading()">
+  <div class="skeleton" style="height: 80px"></div>
+  <div class="skeleton" style="height: 320px"></div>
+</ng-container>
+
+<p class="notice error" *ngIf="!loading() && !meta() && error()">{{ error() }}</p>
+
+<!-- Plan full -->
+<section class="full surface" *ngIf="!loading() && me() as m">
+  <ng-container *ngIf="m.usage.remaining === 0">
+    <h1>All {{ m.usage.limit }} listings are in use</h1>
+    <p class="lead">
+      Your {{ m.plan.name }} plan is full. Upgrade to keep adding properties — your current listings stay live either way.
+    </p>
+    <div class="full-actions">
+      <a class="btn btn-main" routerLink="../plans">See plans</a>
+      <a class="btn btn-ghost" routerLink="../dashboard">Back to my properties</a>
+    </div>
+  </ng-container>
+</section>
+
+<!-- Wizard -->
+<ng-container *ngIf="!loading() && meta() as meta">
+<section class="wizard" *ngIf="(me()?.usage?.remaining ?? 1) > 0">
+
+  <header class="wiz-head">
+    <div>
+      <h1>Add a property</h1>
+      <p class="lead">
+        {{ me()?.usage?.remaining }} of {{ me()?.usage?.limit }} free listing{{ me()?.usage?.limit === 1 ? '' : 's' }} left on your {{ me()?.plan?.name }} plan.
+      </p>
+    </div>
+  </header>
+
+  <ol class="stepper" aria-label="Steps">
+    <li *ngFor="let s of steps; let i = index" [class.done]="i < step()" [class.current]="i === step()">
+      <button type="button" (click)="goTo(i)" [attr.aria-current]="i === step() ? 'step' : null">
+        <span class="num">{{ i + 1 }}</span>
+        <span class="lbl">{{ s }}</span>
+      </button>
+    </li>
+  </ol>
+
+  <div class="surface step-body">
+
+    <!-- 1. BASICS -->
+    <div *ngIf="step() === 0" class="grid">
+      <label class="field span-2">
+        <span>Property name <span class="req">*</span></span>
+        <input type="text" [(ngModel)]="basics.name" name="name" placeholder="Sunrise Boys PG, Belapur" maxlength="120" />
+        <small>Use the name tenants will see on your gate or Google Maps.</small>
+      </label>
+
+      <label class="field">
+        <span>Property type <span class="req">*</span></span>
+        <select [(ngModel)]="basics.property_type" name="ptype">
+          <option *ngFor="let o of meta.options.property_type" [value]="o">{{ pretty(o) }}</option>
+        </select>
+      </label>
+
+      <label class="field">
+        <span>Who can stay <span class="req">*</span></span>
+        <select [(ngModel)]="basics.gender_allowed" name="gender">
+          <option *ngFor="let o of meta.options.gender_allowed" [value]="o">{{ pretty(o) }}</option>
+        </select>
+      </label>
+
+      <label class="field span-2">
+        <span>About your property</span>
+        <textarea [(ngModel)]="basics.description" name="desc" rows="5" maxlength="2000"
+                  placeholder="What’s it like to live here? Mention the building, the neighbourhood, and what tenants like most."></textarea>
+        <small>{{ basics.description.length }}/2000</small>
+      </label>
+    </div>
+
+    <!-- 2. LOCATION -->
+    <div *ngIf="step() === 1" class="grid">
+      <label class="field span-2">
+        <span>Full address <span class="req">*</span></span>
+        <input type="text" [(ngModel)]="location.address" name="address" placeholder="Plot 12, Sector 15, near D-Mart" />
+      </label>
+
+      <label class="field">
+        <span>Area / locality</span>
+        <input type="text" [(ngModel)]="location.area" name="area" placeholder="CBD Belapur" />
+      </label>
+
+      <label class="field" *ngIf="meta.cities.length">
+        <span>City <span class="req">*</span></span>
+        <select [ngModel]="location.city_id" (ngModelChange)="onCityChange($event)" name="city_id">
+          <option [ngValue]="null">Choose city</option>
+          <option *ngFor="let c of meta.cities" [ngValue]="c.id">{{ c.name }}</option>
+        </select>
+      </label>
+      <label class="field" *ngIf="!meta.cities.length">
+        <span>City <span class="req">*</span></span>
+        <input type="text" [(ngModel)]="location.city" name="city" placeholder="Navi Mumbai" />
+      </label>
+
+      <label class="field">
+        <span>State</span>
+        <input type="text" [(ngModel)]="location.state" name="state" placeholder="Maharashtra" />
+      </label>
+
+      <label class="field">
+        <span>Pincode</span>
+        <input type="text" inputmode="numeric" maxlength="6" [(ngModel)]="location.pincode" name="pincode" placeholder="400614" />
+      </label>
+
+      <label class="field span-2">
+        <span>Landmark</span>
+        <input type="text" [(ngModel)]="location.landmark" name="landmark" placeholder="Opposite Belapur railway station" />
+      </label>
+
+      <label class="field span-2">
+        <span>Nearby colleges, offices and transport</span>
+        <textarea [(ngModel)]="location.nearby" name="nearby" rows="3"
+                  placeholder="5 min walk to Belapur station · 10 min to NMIMS · Bus stop outside"></textarea>
+      </label>
+    </div>
+
+    <!-- 3. ROOMS & RENT -->
+    <div *ngIf="step() === 2">
+      <p class="hint">Add one row for each kind of room. Rent is per bed, per month.</p>
+
+      <div class="room" *ngFor="let r of rooms; let i = index">
+        <div class="room-head">
+          <h3>Room type {{ i + 1 }}</h3>
+          <button type="button" class="remove" (click)="removeRoom(i)" *ngIf="rooms.length > 1">Remove</button>
+        </div>
+
+        <div class="grid room-grid">
+          <label class="field">
+            <span>Room type <span class="req">*</span></span>
+            <select *ngIf="meta.options.room_type?.length" [(ngModel)]="r.room_type" [name]="'rtype' + i">
+              <option *ngFor="let o of meta.options.room_type" [value]="o">{{ pretty(o) }}</option>
+            </select>
+            <input *ngIf="!meta.options.room_type?.length" type="text" [(ngModel)]="r.room_type" [name]="'rtype' + i"
+                   list="room-type-ideas" placeholder="Double sharing" />
+          </label>
+
+          <label class="field">
+            <span>Sharing (people per room) <span class="req">*</span></span>
+            <input type="number" min="1" max="20" [(ngModel)]="r.capacity" [name]="'cap' + i" />
+          </label>
+
+          <label class="field">
+            <span>Rent per bed (₹/month) <span class="req">*</span></span>
+            <input type="number" min="500" step="100" [(ngModel)]="r.price_per_bed" [name]="'price' + i" placeholder="7500" />
+          </label>
+
+          <label class="field">
+            <span>Total beds</span>
+            <input type="number" min="1" [(ngModel)]="r.total_beds" [name]="'beds' + i" />
+          </label>
+
+          <label class="field">
+            <span>Beds free right now</span>
+            <input type="number" min="0" [(ngModel)]="r.available" [name]="'avail' + i" />
+          </label>
+
+          <label class="toggle">
+            <input type="checkbox" [(ngModel)]="r.is_ac" [name]="'ac' + i" />
+            <span>AC room</span>
+          </label>
+        </div>
+      </div>
+
+      <datalist id="room-type-ideas">
+        <option value="Single"></option>
+        <option value="Double sharing"></option>
+        <option value="Triple sharing"></option>
+        <option value="Four sharing"></option>
+        <option value="Dormitory"></option>
+      </datalist>
+
+      <button type="button" class="btn btn-ghost" (click)="addRoom()">Add another room type</button>
+
+      <div class="grid deposit">
+        <label class="field">
+          <span>Security deposit (₹)</span>
+          <input type="number" min="0" step="500" [(ngModel)]="security_deposit" name="deposit" placeholder="10000" />
+          <small>Refundable amount tenants pay once.</small>
+        </label>
+        <div class="from" *ngIf="lowestPrice">
+          Tenants will see <strong>from ₹{{ lowestPrice | number:'1.0-0' }}/month</strong>.
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. FOOD & FACILITIES -->
+    <div *ngIf="step() === 3" class="stack">
+      <section>
+        <h3>Food</h3>
+        <div class="choice-row" role="radiogroup" aria-label="Is food provided">
+          <label class="choice" [class.on]="food.available">
+            <input type="radio" name="food_avail" [value]="true" [(ngModel)]="food.available" /> Meals provided
+          </label>
+          <label class="choice" [class.on]="!food.available">
+            <input type="radio" name="food_avail" [value]="false" [(ngModel)]="food.available" /> No meals
+          </label>
+        </div>
+
+        <div *ngIf="food.available" class="food">
+          <div class="field">
+            <span>Which meals</span>
+            <div class="chips">
+              <label class="chip" [class.on]="food.meals.breakfast"><input type="checkbox" [(ngModel)]="food.meals.breakfast" name="m_b" /> Breakfast</label>
+              <label class="chip" [class.on]="food.meals.lunch"><input type="checkbox" [(ngModel)]="food.meals.lunch" name="m_l" /> Lunch</label>
+              <label class="chip" [class.on]="food.meals.snacks"><input type="checkbox" [(ngModel)]="food.meals.snacks" name="m_s" /> Evening snacks</label>
+              <label class="chip" [class.on]="food.meals.dinner"><input type="checkbox" [(ngModel)]="food.meals.dinner" name="m_d" /> Dinner</label>
+            </div>
+          </div>
+
+          <div class="field">
+            <span>Food type</span>
+            <div class="chips">
+              <label class="chip" [class.on]="food.type === 'veg'"><input type="radio" name="ftype" value="veg" [(ngModel)]="food.type" /> Veg only</label>
+              <label class="chip" [class.on]="food.type === 'non-veg'"><input type="radio" name="ftype" value="non-veg" [(ngModel)]="food.type" /> Non-veg</label>
+              <label class="chip" [class.on]="food.type === 'both'"><input type="radio" name="ftype" value="both" [(ngModel)]="food.type" /> Both</label>
+            </div>
+          </div>
+
+          <div class="grid">
+            <div class="field">
+              <span>Cost</span>
+              <div class="chips">
+                <label class="chip" [class.on]="food.included"><input type="radio" name="fincl" [value]="true" [(ngModel)]="food.included" /> Included in rent</label>
+                <label class="chip" [class.on]="!food.included"><input type="radio" name="fincl" [value]="false" [(ngModel)]="food.included" /> Charged extra</label>
+              </div>
+            </div>
+            <label class="field" *ngIf="!food.included">
+              <span>Food charge (₹/month) <span class="req">*</span></span>
+              <input type="number" min="0" step="100" [(ngModel)]="food.charge" name="fcharge" placeholder="3000" />
+            </label>
+          </div>
+
+          <label class="field">
+            <span>Anything else about the food</span>
+            <input type="text" [(ngModel)]="food.notes" name="fnotes" placeholder="Home-style Maharashtrian thali, Sunday special" />
+          </label>
+        </div>
+
+        <label class="toggle">
+          <input type="checkbox" [(ngModel)]="food.self_cooking" name="selfcook" />
+          <span>Tenants can use the kitchen to cook</span>
+        </label>
+      </section>
+
+      <section>
+        <h3>Facilities</h3>
+        <div class="facility-grid">
+          <label class="fac" *ngFor="let f of facilityList" [class.on]="facilities[f.key]">
+            <input type="checkbox" [(ngModel)]="facilities[f.key]" [name]="'fac_' + f.key" />
+            <span>{{ f.label }}</span>
+          </label>
+        </div>
+        <label class="field wifi" *ngIf="facilities['wifi']">
+          <span>WiFi speed</span>
+          <input type="text" [(ngModel)]="wifi_speed" name="wifi_speed" placeholder="100 Mbps fibre" />
+        </label>
+      </section>
+
+      <section *ngIf="meta.amenities.length">
+        <h3>More amenities</h3>
+        <div class="chips">
+          <button type="button" class="chip" *ngFor="let a of meta.amenities"
+                  [class.on]="amenityIds.has(a.id)" [attr.aria-pressed]="amenityIds.has(a.id)"
+                  (click)="toggleAmenity(a.id)">{{ a.name }}</button>
+        </div>
+      </section>
+    </div>
+
+    <!-- 5. HOUSE RULES -->
+    <div *ngIf="step() === 4" class="grid">
+      <label class="field">
+        <span>Gate closing time</span>
+        <input type="time" [(ngModel)]="rules.gate_closing_time" name="gate" />
+        <small>Leave empty if there’s no curfew.</small>
+      </label>
+
+      <label class="field">
+        <span>Visitors</span>
+        <select [(ngModel)]="rules.visitors" name="visitors">
+          <option value="not-allowed">Not allowed</option>
+          <option value="day-only">Daytime only, common area</option>
+          <option value="allowed">Allowed</option>
+        </select>
+      </label>
+
+      <label class="field">
+        <span>Notice period (days)</span>
+        <input type="number" min="0" [(ngModel)]="rules.notice_period_days" name="notice" />
+      </label>
+
+      <label class="field">
+        <span>Minimum stay (months)</span>
+        <input type="number" min="0" [(ngModel)]="rules.min_stay_months" name="minstay" />
+      </label>
+
+      <div class="span-2 toggles">
+        <label class="toggle"><input type="checkbox" [(ngModel)]="rules.smoking" name="smoking" /><span>Smoking allowed</span></label>
+        <label class="toggle"><input type="checkbox" [(ngModel)]="rules.alcohol" name="alcohol" /><span>Alcohol allowed</span></label>
+        <label class="toggle"><input type="checkbox" [(ngModel)]="rules.pets" name="pets" /><span>Pets allowed</span></label>
+      </div>
+
+      <label class="field span-2">
+        <span>Other house rules</span>
+        <textarea [(ngModel)]="rules.house_rules" name="hrules" rows="4"
+                  placeholder="No loud music after 10 pm. Keep shoes in the rack. Electricity above ₹500/month is shared."></textarea>
+      </label>
+    </div>
+
+    <!-- 6. PHOTOS & REVIEW -->
+    <div *ngIf="step() === 5" class="stack">
+      <section>
+        <h3>Photos <span class="count">{{ photos.length }} of {{ maxPhotos }}</span></h3>
+        <p class="hint">
+          Add up to {{ maxPhotos }} photos of your rooms, amenities, washrooms, food and building.
+          Listings with 5 or more bright photos get more enquiries. The first photo is the cover.
+        </p>
+
+        <div class="field upload-as">
+          <span>I’m adding photos of</span>
+          <div class="chips">
+            <button type="button" class="chip" *ngFor="let c of photoCategories"
+                    [class.on]="uploadCategory === c.value" [attr.aria-pressed]="uploadCategory === c.value"
+                    (click)="uploadCategory = c.value">
+              {{ c.label }}<ng-container *ngIf="countFor(c.value)"> ({{ countFor(c.value) }})</ng-container>
+            </button>
+          </div>
+        </div>
+
+        <div class="photos">
+          <figure *ngFor="let p of photos; let i = index" class="photo" [class.cover]="i === 0">
+            <img [src]="p.url" [alt]="p.caption || ('Photo ' + (i + 1))" />
+            <div class="photo-fields">
+              <select [(ngModel)]="p.category" [name]="'pcat' + i" aria-label="Photo type">
+                <option *ngFor="let c of photoCategories" [value]="c.value">{{ c.label }}</option>
+              </select>
+              <input type="text" [(ngModel)]="p.caption" [name]="'pcap' + i" maxlength="150"
+                     placeholder="Caption (optional)" aria-label="Photo caption" />
+            </div>
+            <figcaption>
+              <span *ngIf="i === 0" class="cover-tag">Cover</span>
+              <button type="button" *ngIf="i !== 0" (click)="makeCover(i)">Make cover</button>
+              <button type="button" (click)="removePhoto(i)" aria-label="Remove photo">Remove</button>
+            </figcaption>
+          </figure>
+
+          <label class="add-photo" *ngIf="photos.length < maxPhotos">
+            <input type="file" accept="image/jpeg,image/png,image/webp" multiple (change)="onPhotos($event)" />
+            <span class="plus">+</span>
+            <span>Add {{ uploadCategory === 'other' ? '' : (uploadCategory + ' ') }}photos</span>
+            <small>{{ maxPhotos - photos.length }} left · JPG, PNG, WEBP up to 5 MB each</small>
+          </label>
+        </div>
+      </section>
+
+      <section class="review">
+        <h3>Check before publishing</h3>
+        <dl>
+          <div><dt>Name</dt><dd>{{ basics.name }}</dd></div>
+          <div><dt>Type</dt><dd>{{ pretty(basics.property_type) }} for {{ pretty(basics.gender_allowed) }}</dd></div>
+          <div><dt>Address</dt><dd>{{ location.address }}<ng-container *ngIf="location.city">, {{ location.city }}</ng-container></dd></div>
+          <div><dt>Rooms</dt><dd>{{ rooms.length }} type{{ rooms.length === 1 ? '' : 's' }}, from ₹{{ lowestPrice | number:'1.0-0' }}/month</dd></div>
+          <div><dt>Food</dt><dd>{{ food.available ? (mealsChosen.join(', ') | titlecase) + ' · ' + pretty(food.type) : 'Not provided' }}</dd></div>
+          <div><dt>Facilities</dt><dd>{{ facilitiesChosen.length ? facilitiesChosen.join(', ') : 'None selected' }}</dd></div>
+          <div><dt>Photos</dt><dd>{{ photoSummary || 'None yet' }}</dd></div>
+        </dl>
+      </section>
+    </div>
+
+    <p class="notice error step-error" *ngIf="stepError()" role="alert">{{ stepError() }}</p>
+    <p class="notice error step-error" *ngIf="error() && meta" role="alert">
+      {{ error() }}
+      <a *ngIf="error()?.includes('Upgrade') || error()?.includes('plan')" routerLink="../plans">See plans</a>
+    </p>
+
+    <footer class="wiz-foot">
+      <button type="button" class="btn btn-ghost" (click)="back()" [disabled]="step() === 0">Back</button>
+      <span class="progress">Step {{ step() + 1 }} of {{ steps.length }}</span>
+      <button type="button" class="btn btn-dark" *ngIf="step() < steps.length - 1" (click)="next()">Next: {{ steps[step() + 1] }}</button>
+      <button type="button" class="btn btn-main" *ngIf="step() === steps.length - 1" (click)="publish()" [disabled]="publishing()">
+        {{ publishing() ? 'Publishing…' : 'Publish listing' }}
+      </button>
+    </footer>
+  </div>
+</section>
+</ng-container>

@@ -1,0 +1,368 @@
+<div class="detail-page">
+
+  <!-- ── Loading skeleton ─────────────────────────────────── -->
+  <div class="stage" *ngIf="loading()">
+    <div class="container">
+      <div class="crumbs-skel skel"></div>
+      <div class="gallery skel"></div>
+    </div>
+  </div>
+
+  <div class="state-msg error" *ngIf="error()">
+    <p>{{ error() }}</p>
+    <a routerLink="/properties" class="btn-ghost">Back to all properties</a>
+  </div>
+
+  <ng-container *ngIf="property() as p">
+
+    <!-- ── Stage: dark band with the photo slider ───────────── -->
+    <section class="stage">
+      <!-- soft blurred copy of the current photo fills the background -->
+      <div class="stage-ambient"
+           *ngIf="activeImage()?.image_url as url"
+           [style.background-image]="'url(' + url + ')'"></div>
+
+      <div class="container stage-inner">
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+          <a routerLink="/">Home</a>
+          <span aria-hidden="true">/</span>
+          <a routerLink="/properties">Properties</a>
+          <span aria-hidden="true">/</span>
+          <span class="current">{{ p.name }}</span>
+        </nav>
+
+        <div class="gallery"
+             role="region"
+             aria-roledescription="carousel"
+             [attr.aria-label]="p.name + ' photos'"
+             tabindex="0"
+             (mouseenter)="hovering.set(true)"
+             (mouseleave)="hovering.set(false)"
+             (focusin)="hovering.set(true)"
+             (focusout)="hovering.set(false)"
+             (keydown.arrowright)="next()"
+             (keydown.arrowleft)="prev()"
+             (touchstart)="onTouchStart($event)"
+             (touchend)="onTouchEnd($event)">
+
+          <!-- Slides -->
+          <div class="track" [class.dir-prev]="slideDir() === 'prev'" *ngIf="images().length; else noPhotos">
+            <figure class="slide"
+                    *ngFor="let img of images(); let i = index"
+                    [ngClass]="slideState(i)"
+                    [attr.aria-hidden]="i !== activeImageIndex()">
+              <img [src]="img.image_url"
+                   [alt]="imageLabel(img) || (p.name + ' photo ' + (i + 1))"
+                   [attr.loading]="loadingFor(i)"
+                   draggable="false" />
+              <figcaption *ngIf="imageLabel(img)">{{ imageLabel(img) }}</figcaption>
+            </figure>
+          </div>
+
+          <ng-template #noPhotos>
+            <div class="no-photos">
+              <span>🏠</span>
+              Photos coming soon
+            </div>
+          </ng-template>
+
+          <div class="shade" aria-hidden="true"></div>
+
+          <!-- Top overlays -->
+          <span class="badge-verified" *ngIf="p.is_verified">✓ Verified</span>
+          <div class="fav-slot">
+            <app-favorite-button [propertyId]="p.id"></app-favorite-button>
+          </div>
+
+          <!-- Controls (only when there is more than one photo) -->
+          <ng-container *ngIf="images().length > 1">
+            <button type="button" class="nav-btn prev" (click)="prev()" aria-label="Previous photo">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
+            </button>
+            <button type="button" class="nav-btn next" (click)="next()" aria-label="Next photo">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" /></svg>
+            </button>
+
+            <div class="gallery-footer">
+              <div class="dots" role="tablist" aria-label="Choose photo">
+                <button type="button"
+                        class="dot"
+                        *ngFor="let img of images(); let i = index"
+                        role="tab"
+                        [attr.aria-selected]="i === activeImageIndex()"
+                        [attr.aria-label]="'Photo ' + (i + 1)"
+                        [class.active]="i === activeImageIndex()"
+                        (click)="setActiveImage(i)">
+                  <span class="fill"
+                        [class.run]="i === activeImageIndex() && isPlaying()"
+                        [style.animation-duration.ms]="slideMs"></span>
+                </button>
+              </div>
+
+              <div class="footer-right">
+                <span class="counter" aria-live="polite">
+                  {{ activeImageIndex() + 1 }} <em>/ {{ images().length }}</em>
+                </span>
+                <button type="button" class="play-btn" (click)="togglePlay()"
+                        [attr.aria-label]="userPaused() ? 'Play slideshow' : 'Pause slideshow'">
+                  <svg *ngIf="!userPaused()" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14" /></svg>
+                  <svg *ngIf="userPaused()" viewBox="0 0 24 24" aria-hidden="true" class="play"><path d="M7 4.5v15l12-7.5z" /></svg>
+                </button>
+              </div>
+            </div>
+          </ng-container>
+        </div>
+
+        <!-- Thumbnails -->
+        <div class="thumbs" #thumbStrip *ngIf="images().length > 1">
+          <button type="button"
+                  class="thumb"
+                  *ngFor="let img of images(); let i = index"
+                  [class.active]="i === activeImageIndex()"
+                  [attr.aria-label]="'Show photo ' + (i + 1)"
+                  (click)="setActiveImage(i)">
+            <img [src]="img.image_url" alt="" loading="lazy" />
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Body ─────────────────────────────────────────────── -->
+    <div class="container">
+      <div class="detail-grid">
+
+        <!-- Left column -->
+        <div class="detail-main">
+
+          <header class="title-card">
+            <div class="title-row">
+              <div>
+                <h1>{{ p.name }}</h1>
+                <p class="location">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z" /><circle cx="12" cy="9.5" r="2.5" /></svg>
+                  {{ p.area }}<ng-container *ngIf="p.city">, {{ p.city }}</ng-container><ng-container *ngIf="p.state">, {{ p.state }}</ng-container>
+                </p>
+              </div>
+
+              <div class="rating-box" *ngIf="p.total_reviews > 0; else newListing">
+                <span class="rating-value">★ {{ p.avg_rating | number: '1.1-1' }}</span>
+                <span class="reviews">{{ p.total_reviews }} {{ p.total_reviews === 1 ? 'review' : 'reviews' }}</span>
+              </div>
+              <ng-template #newListing>
+                <span class="new-pill">New listing</span>
+              </ng-template>
+            </div>
+
+            <div class="facts">
+              <div class="fact">
+                <span class="fact-label">Rent from</span>
+                <span class="fact-value">₹{{ p.monthly_rent | number }}<small>/mo</small></span>
+              </div>
+              <div class="fact">
+                <span class="fact-label">Deposit</span>
+                <span class="fact-value">₹{{ p.security_deposit | number }}</span>
+              </div>
+              <div class="fact">
+                <span class="fact-label">Stay type</span>
+                <span class="fact-value">{{ p.property_type | uppercase }}</span>
+              </div>
+              <div class="fact">
+                <span class="fact-label">For</span>
+                <span class="fact-value">{{ p.gender_allowed | titlecase }}</span>
+              </div>
+              <div class="fact">
+                <span class="fact-label">Rooms open</span>
+                <span class="fact-value" [class.low]="p.available_rooms < 2">{{ p.available_rooms }}</span>
+              </div>
+            </div>
+          </header>
+
+          <section class="section-block" *ngIf="p.description">
+            <h2>About this property</h2>
+            <p class="description">{{ p.description }}</p>
+          </section>
+
+          <section class="section-block" *ngIf="p.amenities?.length">
+            <h2>Amenities</h2>
+            <div class="amenities-grid">
+              <span class="amenity-pill" *ngFor="let a of p.amenities">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>
+                {{ a.name }}
+              </span>
+            </div>
+          </section>
+
+          <section class="section-block">
+            <h2>Available rooms</h2>
+            <div class="rooms-list">
+              <article class="room-card" *ngFor="let room of p.rooms" [class.full]="room.available < 1">
+                <div class="room-icon" aria-hidden="true">
+                  <span *ngFor="let b of bedSlots(room.capacity)"></span>
+                </div>
+                <div class="room-info">
+                  <h3>{{ room.room_type }}</h3>
+                  <p>{{ room.capacity }} person(s) sharing</p>
+                  <span class="beds" [class.none]="room.available < 1">
+                    {{ room.available < 1 ? 'No beds left' : room.available + (room.available == 1 ? ' bed left' : ' beds left') }}
+                  </span>
+                </div>
+                <div class="room-price">
+                  <span class="price">₹{{ room.price_per_bed | number }}</span>
+                  <span class="period">per bed / month</span>
+                </div>
+                <button
+                  class="btn-book"
+                  [disabled]="room.available < 1"
+                  (click)="openBookingModal(room.id)">
+                  {{ room.available < 1 ? 'Full' : 'Book now' }}
+                </button>
+              </article>
+
+              <p class="muted" *ngIf="!p.rooms?.length">The owner hasn’t added rooms yet. Send an enquiry from the card on the right.</p>
+            </div>
+          </section>
+
+          <app-property-extras [propertyId]="p.id"></app-property-extras>
+
+          <section class="section-block" *ngIf="p.reviews?.length">
+            <h2>Resident reviews</h2>
+            <div class="reviews-list">
+              <div class="review-card" *ngFor="let r of p.reviews">
+                <div class="review-header">
+                  <span class="avatar">{{ (r.full_name || '?').charAt(0) }}</span>
+                  <strong>{{ r.full_name }}</strong>
+                  <span class="review-stars">
+                    <span class="star" *ngFor="let filled of getStarArray(r.rating)" [class.filled]="filled">★</span>
+                  </span>
+                </div>
+                <p class="review-title" *ngIf="r.title">{{ r.title }}</p>
+                <p class="review-comment">{{ r.comment }}</p>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <!-- Right column — sticky summary card -->
+        <aside class="detail-sidebar">
+          <div class="sidebar-card">
+            <div class="sidebar-top">
+              <span class="sidebar-label">Starting rent</span>
+              <div class="sidebar-price">
+                <span class="price">₹{{ p.monthly_rent | number }}</span>
+                <span class="period">/month</span>
+              </div>
+              <p class="sidebar-deposit">Security deposit ₹{{ p.security_deposit | number }}</p>
+            </div>
+
+            <div class="sidebar-body">
+              <p class="availability" [class.none]="!hasFreeBeds(p)">
+                <span class="pulse" aria-hidden="true"></span>
+                {{ hasFreeBeds(p) ? 'Beds available now' : 'Currently full — enquire for the waitlist' }}
+              </p>
+
+              <button
+                class="btn-primary-full"
+                [disabled]="!p.rooms?.length"
+                (click)="bookFirstRoom()">
+                Book this property
+              </button>
+
+              <!-- Save for later -->
+              <div class="sidebar-save">
+                <app-favorite-button [propertyId]="p.id" variant="pill"></app-favorite-button>
+                <a routerLink="/favorites" class="sidebar-saved-link">View saved hostels</a>
+              </div>
+
+              <p class="sidebar-note">We’ll reach you within 2 hours of your enquiry.</p>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </div>
+
+    <!-- Mobile: price + book button pinned to the bottom -->
+    <div class="mobile-bar">
+      <div>
+        <span class="price">₹{{ p.monthly_rent | number }}</span>
+        <span class="period">/month</span>
+      </div>
+      <button class="btn-primary" [disabled]="!p.rooms?.length" (click)="bookFirstRoom()">Book now</button>
+    </div>
+  </ng-container>
+
+  <!-- ── Booking Dialog ───────────────────────────────────────── -->
+  <div class="modal-overlay" *ngIf="showBookingModal()" (click)="closeBookingModal()">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="bookingTitle" (click)="$event.stopPropagation()">
+
+      <!-- Success state -->
+      <ng-container *ngIf="bookingSuccess() as s; else bookingFormTpl">
+        <div class="modal-success">
+          <div class="success-icon">✓</div>
+          <h2 id="bookingTitle">Enquiry sent</h2>
+          <p class="success-ref">Booking reference <strong>{{ s.booking_ref }}</strong></p>
+          <div class="reach-banner">We will reach you within 2 hours.</div>
+          <p class="success-copy">We’ve emailed the property owner and our team with your details.</p>
+          <button class="btn-primary-full" (click)="closeBookingModal()">Done</button>
+        </div>
+      </ng-container>
+
+      <!-- Form state -->
+      <ng-template #bookingFormTpl>
+        <div class="modal-header">
+          <h2 id="bookingTitle">Book this room</h2>
+          <button class="modal-close" (click)="closeBookingModal()" aria-label="Close">×</button>
+        </div>
+
+        <p class="modal-subtext" *ngIf="selectedRoom as r">
+          {{ r.room_type }} · ₹{{ r.price_per_bed | number }}/month
+        </p>
+
+        <form (ngSubmit)="submitBooking()" class="modal-form">
+          <div class="field-row">
+            <div class="field">
+              <label for="bk-name">Full name</label>
+              <input id="bk-name" type="text" [(ngModel)]="form.fullName" name="fullName" required placeholder="Your name" />
+            </div>
+            <div class="field">
+              <label for="bk-phone">Phone</label>
+              <input id="bk-phone" type="tel" [(ngModel)]="form.phone" name="phone" required placeholder="10-digit number" />
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="bk-email">Email</label>
+            <input id="bk-email" type="email" [(ngModel)]="form.email" name="email" required placeholder="you@email.com" />
+          </div>
+
+          <div class="field">
+            <label for="bk-address">Address</label>
+            <input id="bk-address" type="text" [(ngModel)]="form.address" name="address" placeholder="Current address (optional)" />
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label for="bk-city">City</label>
+              <input id="bk-city" type="text" [(ngModel)]="form.city" name="city" placeholder="Your city" />
+            </div>
+            <div class="field">
+              <label for="bk-date">Check-in date</label>
+              <input id="bk-date" type="date" [(ngModel)]="form.checkInDate" name="checkInDate" required />
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="bk-months">Duration (months)</label>
+            <input id="bk-months" type="number" [(ngModel)]="form.durationMonths" name="duration" min="1" max="24" required />
+          </div>
+
+          <p class="form-error" *ngIf="bookingError()">{{ bookingError() }}</p>
+
+          <button type="submit" class="btn-submit" [disabled]="bookingSubmitting()">
+            {{ bookingSubmitting() ? 'Sending…' : 'Send booking enquiry' }}
+          </button>
+          <p class="form-note">We’ll reach you within 2 hours of submitting this enquiry.</p>
+        </form>
+      </ng-template>
+    </div>
+  </div>
+</div>

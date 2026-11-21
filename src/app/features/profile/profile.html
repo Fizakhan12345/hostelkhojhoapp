@@ -1,0 +1,124 @@
+<div class="profile-page" style="margin-top: 20px;">
+
+  <!-- Navy hero banner, same gradient family as the homepage hero -->
+  <div class="profile-hero">
+    <svg class="hero-skyline" viewBox="0 0 1600 220" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M0,220 L0,140 L40,140 L40,110 L80,110 L80,150 L130,150 L130,90 L160,90 L160,150 L210,150
+        L210,60 Q230,40 250,60 L250,150 L300,150 L300,120 L340,120 L340,150 L390,150 L390,80 L420,80 L420,150
+        L470,150 L470,100 L520,100 L520,150 L560,150 L560,50 L580,30 L600,50 L600,150 L650,150 L650,110 L690,110
+        L690,150 L740,150 L740,70 L770,70 L770,150 L820,150 L820,130 L860,130 L860,150 L910,150 L910,90 L950,90
+        L950,150 L1000,150 L1000,55 Q1020,35 1040,55 L1040,150 L1090,150 L1090,120 L1130,120 L1130,150 L1180,150
+        L1180,80 L1210,80 L1210,150 L1260,150 L1260,105 L1300,105 L1300,150 L1350,150 L1350,65 L1380,65 L1380,150
+        L1430,150 L1430,125 L1470,125 L1470,150 L1520,150 L1520,95 L1560,95 L1560,150 L1600,150 L1600,220 Z"
+        class="skyline-fill" />
+    </svg>
+  </div>
+
+  <div class="container">
+
+    <!-- Skeleton loading state -->
+    <div class="skeleton-card" *ngIf="loading()">
+      <div class="skeleton-avatar shimmer"></div>
+      <div class="skeleton-line shimmer" style="width: 40%; height: 22px; margin: 0.9rem auto 0.5rem;"></div>
+      <div class="skeleton-line shimmer" style="width: 55%;"></div>
+      <div class="skeleton-block shimmer"></div>
+      <div class="skeleton-block shimmer"></div>
+      <div class="skeleton-block shimmer"></div>
+    </div>
+
+    <ng-container *ngIf="!loading() && auth.currentUser() as user">
+
+      <div class="profile-card fade-in-up">
+
+        <!-- Toasts -->
+        <div class="toast-wrap">
+          <p class="toast success" *ngIf="successMsg()">✅ {{ successMsg() }}</p>
+          <p class="toast error" *ngIf="errorMsg()">⚠️ {{ errorMsg() }}</p>
+        </div>
+
+        <!-- Avatar overlapping the hero, ticket-stub ring -->
+        <div class="avatar-block">
+          <div class="avatar-wrap" [class.uploading]="uploadingPic()">
+            <img *ngIf="user.profile_pic" [src]="user.profile_pic" alt="Profile picture" />
+            <span *ngIf="!user.profile_pic" class="avatar-fallback">{{ user.full_name.charAt(0) }}</span>
+            <span class="avatar-ring"></span>
+
+            <label class="avatar-upload-btn" [class.busy]="uploadingPic()">
+              <span *ngIf="!uploadingPic()">📷</span>
+              <span class="spinner" *ngIf="uploadingPic()"></span>
+              <input type="file" accept="image/png,image/jpeg,image/webp" (change)="onPictureSelected($event)" hidden />
+            </label>
+          </div>
+
+          <h1>{{ user.full_name }}</h1>
+          <p class="email">{{ user.email }}</p>
+          <span class="verified-badge" *ngIf="user.is_verified">
+            <span class="badge-icon">✓</span> Verified Member
+          </span>
+        </div>
+
+        <!-- View mode -->
+        <div class="details-grid" *ngIf="!editing">
+          <div class="detail-row" *ngFor="let row of [
+              { label: 'Full Name', value: user.full_name },
+              { label: 'Email', value: user.email },
+              { label: 'Phone', value: user.phone },
+              { label: 'Gender', value: user.gender || 'Not set' }
+            ]; let i = index"
+            [style.animation-delay.ms]="i * 60">
+            <span class="label">{{ row.label }}</span>
+            <span class="value">{{ row.value }}</span>
+          </div>
+
+          <button class="btn-edit" (click)="startEditing()">
+            <span class="edit-icon">✎</span> Edit Details
+          </button>
+        </div>
+
+        <!-- Edit mode -->
+        <form class="edit-form" *ngIf="editing" (ngSubmit)="saveProfile()">
+          <div class="field">
+            <label>Full Name</label>
+            <input type="text" [(ngModel)]="form.full_name" name="full_name" required />
+          </div>
+
+          <div class="field">
+            <label>Phone</label>
+            <input type="tel" [(ngModel)]="form.phone" name="phone" required />
+          </div>
+
+          <div class="field">
+            <label>Gender</label>
+            <div class="chip-select">
+              <button
+                type="button"
+                *ngFor="let g of genderOptions"
+                class="gender-chip"
+                [class.active]="form.gender === g.value"
+                (click)="selectGender(g.value)">
+                {{ g.label }}
+              </button>
+            </div>
+          </div>
+
+          <div class="field readonly">
+            <label>Email</label>
+            <input type="email" [value]="user.email" disabled />
+            <span class="hint">Email can't be changed here.</span>
+          </div>
+
+          <div class="edit-actions">
+            <button type="button" class="btn-cancel" (click)="cancelEditing()">Cancel</button>
+            <button type="submit" class="btn-save" [disabled]="saving()">
+              <span *ngIf="!saving()">Save Changes</span>
+              <span *ngIf="saving()"><span class="spinner light"></span> Saving…</span>
+            </button>
+          </div>
+        </form>
+
+        <button class="btn-logout" (click)="logout()">Log Out</button>
+      </div>
+
+    </ng-container>
+  </div>
+</div>

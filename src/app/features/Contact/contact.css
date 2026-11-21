@@ -1,0 +1,614 @@
+/* contact.css */
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700;9..144,800&family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@500;600&display=swap');
+
+.contact-page {
+  --navy-900: #14152C;
+  --navy-800: #1C1E42;
+  --navy-700: #2A2D63;
+  --amber-500: #F2891C;
+  --amber-600: #DA7409;
+  --amber-100: #FDE9D0;
+  --cream-50: #FBF7EF;
+  --cream-100: #F3ECDC;
+  --ink-900: #1B1B2F;
+  --ink-500: #666A82;
+  --green: #25D366;
+  --green-dark: #128C7E;
+  --line: #E4DCC8;
+
+  width: 100%;
+  overflow-x: hidden;
+  font-family: 'Manrope', sans-serif;
+  color: var(--ink-900);
+  background: var(--cream-50);
+}
+
+.contact-page h1,
+.contact-page h2,
+.contact-page h3 {
+  font-family: 'Fraunces', serif;
+  letter-spacing: -0.01em;
+}
+
+.eyebrow {
+  display: inline-block;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--amber-600);
+  margin-bottom: 0.6rem;
+}
+
+/* ==================== Hero ==================== */
+.hero-section {
+  position: relative;
+  min-height: 560px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6rem 1.5rem 2rem;
+  overflow: hidden;
+  background: linear-gradient(160deg, var(--navy-900) 0%, var(--navy-700) 100%);
+}
+
+.hero-skyline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 130px;
+  opacity: 0.5;
+}
+
+.skyline-fill {
+  fill: var(--navy-800);
+}
+
+.hero-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(70px);
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+.orb-1 {
+  width: 420px;
+  height: 420px;
+  background: radial-gradient(circle, rgba(242, 137, 28, 0.55) 0%, transparent 70%);
+  top: -12%;
+  left: -8%;
+}
+
+.orb-2 {
+  width: 380px;
+  height: 380px;
+  background: radial-gradient(circle, rgba(102, 108, 190, 0.45) 0%, transparent 70%);
+  bottom: -18%;
+  right: -8%;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 1;
+  max-width: 900px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.hero-tag {
+  display: inline-block;
+  padding: 0.4rem 1.1rem;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 100px;
+  color: white;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin-bottom: 1.5rem;
+}
+
+.hero-title {
+  font-size: clamp(2.2rem, 5vw, 3.4rem);
+  font-weight: 700;
+  color: white;
+  line-height: 1.15;
+  margin-bottom: 1.25rem;
+}
+
+.gradient-text {
+  color: var(--amber-500);
+}
+
+.hero-description {
+  font-size: 1.05rem;
+  color: #C9CBE0;
+  max-width: 620px;
+  margin: 0 auto 2.75rem;
+  line-height: 1.7;
+}
+
+.hero-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  max-width: 720px;
+  margin: 0 auto;
+  border-top: 1px dashed rgba(255, 255, 255, 0.22);
+  padding-top: 1.75rem;
+  gap: 0.5rem;
+}
+
+.stat-card {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  border-right: 1px dashed rgba(255, 255, 255, 0.16);
+  padding: 0 0.75rem;
+}
+
+.stat-card:last-child {
+  border-right: none;
+}
+
+.stat-icon {
+  width: 44px;
+  height: 44px;
+  background: var(--navy-800);
+  border: 1px solid rgba(242, 137, 28, 0.35);
+  border-radius: 0.6rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--amber-500);
+  flex-shrink: 0;
+}
+
+.stat-content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+}
+
+.stat-value {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: white;
+  line-height: 1;
+}
+
+.stat-label {
+  font-size: 0.78rem;
+  color: #C9CBE0;
+  margin-top: 0.3rem;
+}
+
+/* ==================== CTA Band ==================== */
+.contact-section {
+  background: var(--navy-900);
+  padding: 4.5rem 1.5rem;
+  text-align: center;
+  color: white;
+  border-top: 1px solid rgba(242, 137, 28, 0.15);
+}
+
+.contact-content {
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.contact-content h2 {
+  font-size: clamp(1.6rem, 3.5vw, 2.2rem);
+  font-weight: 700;
+  margin-bottom: 0.85rem;
+  color: white;
+}
+
+.contact-content p {
+  font-size: 1rem;
+  color: #C9CBE0;
+  line-height: 1.7;
+  margin-bottom: 2rem;
+}
+
+.contact-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.9rem 2rem;
+  background: var(--amber-500);
+  color: white;
+  text-decoration: none;
+  border-radius: 0.6rem;
+  font-weight: 700;
+  font-size: 1rem;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.contact-btn:hover {
+  background: var(--amber-600);
+  transform: translateY(-2px);
+}
+
+.contact-btn .arrow {
+  transition: transform 0.2s;
+}
+
+.contact-btn:hover .arrow {
+  transform: translateX(4px);
+}
+
+/* ==================== Quick Contact Stack ==================== */
+.quick-contacts {
+  position: fixed;
+  bottom: 108px;
+  right: 1.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  z-index: 999;
+}
+
+.quick-btn {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(20, 21, 44, 0.25);
+  transition: transform 0.2s, box-shadow 0.2s;
+  position: relative;
+}
+
+.quick-btn svg {
+  width: 22px;
+  height: 22px;
+  fill: white;
+}
+
+.call-btn {
+  background: var(--navy-800);
+  border: 1.5px solid var(--amber-500);
+}
+
+.call-btn svg { fill: var(--amber-500); }
+
+.email-btn {
+  background: var(--amber-500);
+}
+
+.quick-btn:hover {
+  transform: translateY(-3px) scale(1.06);
+  box-shadow: 0 12px 26px rgba(20, 21, 44, 0.32);
+}
+
+.quick-btn-label {
+  position: absolute;
+  right: 64px;
+  top: 50%;
+  transform: translateY(-50%) translateX(6px);
+  background: var(--navy-900);
+  color: white;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.4rem 0.75rem;
+  border-radius: 0.4rem;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s, transform 0.2s;
+}
+
+.quick-btn:hover .quick-btn-label {
+  opacity: 1;
+  transform: translateY(-50%) translateX(0);
+}
+
+/* ==================== WhatsApp Widget ==================== */
+.whatsapp-widget {
+  position: fixed;
+  bottom: 1.75rem;
+  right: 1.75rem;
+  z-index: 1000;
+}
+
+.whatsapp-button {
+  width: 60px;
+  height: 60px;
+  background: var(--green);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 10px 28px rgba(37, 211, 102, 0.45);
+  transition: transform 0.2s, box-shadow 0.2s;
+  position: relative;
+}
+
+.whatsapp-button:hover {
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 14px 34px rgba(37, 211, 102, 0.55);
+}
+
+.whatsapp-button svg {
+  width: 30px;
+  height: 30px;
+  fill: white;
+  position: relative;
+  z-index: 1;
+}
+
+.whatsapp-ping {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: var(--green);
+  opacity: 0.55;
+  animation: whatsappPing 2.2s ease-out infinite;
+}
+
+@keyframes whatsappPing {
+  0% { transform: scale(1); opacity: 0.55; }
+  100% { transform: scale(1.9); opacity: 0; }
+}
+
+.whatsapp-chat-box {
+  position: absolute;
+  bottom: 76px;
+  right: 0;
+  width: 340px;
+  background: white;
+  border-radius: 1rem;
+  box-shadow: 0 24px 60px rgba(20, 21, 44, 0.35);
+  overflow: hidden;
+  transform: scale(0);
+  transform-origin: bottom right;
+  transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  border: 1px solid var(--line);
+}
+
+.whatsapp-chat-box.active {
+  transform: scale(1);
+}
+
+.chat-header {
+  background: var(--navy-900);
+  padding: 1.1rem 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.chat-header-content {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.chat-logo {
+  width: 42px;
+  height: 42px;
+  background: var(--amber-500);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Fraunces', serif;
+  font-weight: 700;
+  color: white;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.chat-info h3 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: white;
+  margin-bottom: 0.15rem;
+}
+
+.chat-status {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.78rem;
+  color: #C9CBE0;
+}
+
+.status-dot {
+  width: 6px;
+  height: 6px;
+  background: var(--green);
+  border-radius: 50%;
+}
+
+.close-chat {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1.4rem;
+  cursor: pointer;
+  padding: 0.2rem;
+  line-height: 1;
+  transition: transform 0.2s, opacity 0.2s;
+}
+
+.close-chat:hover {
+  transform: rotate(90deg);
+  opacity: 0.75;
+}
+
+.chat-body {
+  background: var(--cream-100);
+  padding: 1.25rem;
+  min-height: 140px;
+}
+
+.chat-message {
+  background: white;
+  padding: 0.75rem 0.9rem;
+  border-radius: 0.5rem 0.5rem 0.5rem 0;
+  box-shadow: 0 1px 3px rgba(20, 21, 44, 0.08);
+  max-width: 88%;
+}
+
+.message-text {
+  font-size: 0.88rem;
+  color: var(--ink-900);
+  line-height: 1.5;
+  margin-bottom: 0.3rem;
+}
+
+.message-time {
+  font-size: 0.7rem;
+  color: var(--ink-500);
+}
+
+.chat-footer {
+  padding: 0.9rem 1rem;
+  background: white;
+  border-top: 1px solid var(--line);
+}
+
+.chat-input-container {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.chat-input {
+  flex: 1;
+  padding: 0.65rem 0.9rem;
+  border: 1.5px solid var(--line);
+  border-radius: 100px;
+  font-size: 0.88rem;
+  font-family: 'Manrope', sans-serif;
+  outline: none;
+  transition: border-color 0.2s;
+  color: var(--ink-900);
+}
+
+.chat-input:focus {
+  border-color: var(--green);
+}
+
+.send-button {
+  width: 40px;
+  height: 40px;
+  background: var(--green);
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, transform 0.2s;
+  flex-shrink: 0;
+}
+
+.send-button:hover {
+  background: var(--green-dark);
+  transform: scale(1.05);
+}
+
+.send-button svg {
+  width: 18px;
+  height: 18px;
+  fill: white;
+}
+
+.chat-powered {
+  text-align: center;
+  font-size: 0.7rem;
+  color: var(--ink-500);
+  margin-top: 0.6rem;
+}
+
+/* ==================== Responsive ==================== */
+@media (prefers-reduced-motion: reduce) {
+  .whatsapp-ping {
+    animation: none;
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .hero-section {
+    min-height: auto;
+    padding: 5rem 1.25rem 2.5rem;
+  }
+
+  .hero-stats {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+    border-top: none;
+    padding-top: 0.5rem;
+  }
+
+  .stat-card {
+    border-right: none;
+    border-bottom: 1px dashed rgba(255, 255, 255, 0.16);
+    padding-bottom: 1.1rem;
+    justify-content: center;
+  }
+
+  .stat-card:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+
+  .contact-section {
+    padding: 3.5rem 1.25rem;
+  }
+
+  .whatsapp-widget {
+    bottom: 1.1rem;
+    right: 1.1rem;
+  }
+
+  .whatsapp-button {
+    width: 54px;
+    height: 54px;
+  }
+
+  .whatsapp-button svg {
+    width: 26px;
+    height: 26px;
+  }
+
+  .quick-contacts {
+    bottom: 96px;
+    right: 1.1rem;
+    gap: 0.65rem;
+  }
+
+  .quick-btn {
+    width: 46px;
+    height: 46px;
+  }
+
+  .quick-btn-label {
+    display: none;
+  }
+
+  .whatsapp-chat-box {
+    width: calc(100vw - 2.5rem);
+    right: -0.6rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-title {
+    font-size: 2rem;
+  }
+}

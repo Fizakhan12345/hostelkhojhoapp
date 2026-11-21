@@ -1,0 +1,110 @@
+<div class="lists-page">
+  <div class="lists-hero">
+    <div class="container">
+      <h1>My Bookings</h1>
+      <p *ngIf="!loading()">
+        {{ counts().all }} {{ counts().all === 1 ? 'booking' : 'bookings' }}
+      </p>
+      <p *ngIf="loading()">Track your stays and payments</p>
+    </div>
+  </div>
+
+  <div class="container lists-body">
+
+    <!-- Tabs -->
+    <div class="tabs" *ngIf="!loading() && counts().all > 0">
+      <button *ngFor="let t of tabs"
+              type="button"
+              class="tab"
+              [class.active]="tab() === t.key"
+              (click)="setTab(t.key)">
+        {{ t.label }} <span class="count">{{ counts()[t.key] }}</span>
+      </button>
+    </div>
+
+    <p class="alert error" *ngIf="error()">
+      ⚠️ {{ error() }}
+      <button class="link-btn" (click)="load()">Try again</button>
+    </p>
+
+    <!-- Skeleton -->
+    <div class="list" *ngIf="loading()">
+      <div class="booking skeleton" *ngFor="let s of [1,2]">
+        <div class="b-img shimmer"></div>
+        <div class="b-body">
+          <div class="line shimmer" style="width: 50%"></div>
+          <div class="line shimmer" style="width: 35%"></div>
+          <div class="line shimmer" style="width: 65%"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty (no bookings at all) -->
+    <div class="empty" *ngIf="!loading() && !error() && counts().all === 0">
+      <div class="empty-icon">📋</div>
+      <h2>No bookings yet</h2>
+      <p>When you book a hostel, it will show up here with its status and payment details.</p>
+      <a routerLink="/find-hostel" class="btn-primary">Find a Hostel</a>
+    </div>
+
+    <!-- Empty (this tab only) -->
+    <div class="empty small" *ngIf="!loading() && counts().all > 0 && filtered().length === 0">
+      <p>No {{ tab() === 'active' ? 'current' : tab() }} bookings.</p>
+    </div>
+
+    <!-- List -->
+    <div class="list" *ngIf="!loading() && filtered().length">
+      <article class="booking" *ngFor="let b of filtered()">
+
+        <a class="b-img"
+           [routerLink]="b.property ? [detailRoute, b.property.id] : null">
+          <img *ngIf="b.property?.image; else noImg" [src]="b.property?.image" [alt]="b.property?.name" loading="lazy" />
+          <ng-template #noImg><div class="no-img">🏠</div></ng-template>
+        </a>
+
+        <div class="b-body">
+          <div class="b-top">
+            <div>
+              <h3>{{ b.property?.name || 'Hostel' }}</h3>
+              <p class="location" *ngIf="b.property?.location">📍 {{ b.property?.location }}</p>
+            </div>
+            <span class="status" [ngClass]="statusClass(b)">{{ statusLabel(b.status) }}</span>
+          </div>
+
+          <div class="b-meta">
+            <div class="meta">
+              <span class="meta-label">Booking ID</span>
+              <span class="meta-value mono">{{ b.ref }}</span>
+            </div>
+            <div class="meta" *ngIf="b.checkIn">
+              <span class="meta-label">Move-in</span>
+              <span class="meta-value">{{ b.checkIn | date:'d MMM y' }}</span>
+            </div>
+            <div class="meta" *ngIf="b.checkOut">
+              <span class="meta-label">Move-out</span>
+              <span class="meta-value">{{ b.checkOut | date:'d MMM y' }}</span>
+            </div>
+            <div class="meta" *ngIf="b.roomType">
+              <span class="meta-label">Room</span>
+              <span class="meta-value">{{ b.roomType | titlecase }}</span>
+            </div>
+            <div class="meta" *ngIf="b.amount">
+              <span class="meta-label">Amount</span>
+              <span class="meta-value strong">₹{{ b.amount | number:'1.0-0' }}</span>
+            </div>
+            <div class="meta" *ngIf="b.paymentStatus">
+              <span class="meta-label">Payment</span>
+              <span class="meta-value">{{ statusLabel(b.paymentStatus) }}</span>
+            </div>
+          </div>
+
+          <div class="b-foot">
+            <span class="booked-on" *ngIf="b.bookedOn">Booked on {{ b.bookedOn | date:'d MMM y, h:mm a' }}</span>
+            <a *ngIf="b.property" class="btn-outline" [routerLink]="[detailRoute, b.property.id]">View Hostel</a>
+          </div>
+        </div>
+      </article>
+    </div>
+
+  </div>
+</div>

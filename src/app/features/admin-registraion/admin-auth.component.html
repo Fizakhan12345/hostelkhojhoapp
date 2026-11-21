@@ -1,0 +1,139 @@
+<!-- admin-auth.component.html — property owner login & sign-up -->
+<div class="owner-auth">
+
+  <!-- ── The night building: each window is a listing ── -->
+  <section class="scene" aria-hidden="false">
+    <div class="sky"></div>
+
+    <div class="scene-copy">
+      <p class="kicker">For hostel &amp; PG owners</p>
+      <h1>Light up<br />your property.</h1>
+      <p class="lede">
+        List your hostel or PG on HostelKhojo and get found by students and working
+        professionals across India. Your first five listings are free.
+      </p>
+
+      <ul class="promises">
+        <li *ngFor="let p of promises">
+          <strong>{{ p.title }}</strong>
+          <span>{{ p.text }}</span>
+        </li>
+      </ul>
+    </div>
+
+    <div class="building" role="img" aria-label="A building at night with five glowing windows, one for each free listing">
+      <div class="roof"></div>
+      <div class="facade">
+        <span *ngFor="let w of windows"
+              class="win"
+              [class.lit]="w.lit && !w.free"
+              [class.free]="w.free"
+              [style.--d]="w.order"></span>
+      </div>
+      <div class="door"></div>
+      <p class="caption"><span class="dot"></span> 5 free listings, one for each window</p>
+    </div>
+  </section>
+
+  <!-- ── Form panel ── -->
+  <section class="panel">
+    <div class="card">
+
+      <div class="tabs" role="tablist">
+        <button type="button" role="tab" [attr.aria-selected]="activeTab === 'signup'"
+                [class.active]="activeTab === 'signup'" (click)="switchTab('signup')">
+          Create owner account
+        </button>
+        <button type="button" role="tab" [attr.aria-selected]="activeTab === 'login'"
+                [class.active]="activeTab === 'login'" (click)="switchTab('login')">
+          Owner login
+        </button>
+      </div>
+
+      <!-- SIGN UP -->
+      <form *ngIf="activeTab === 'signup'" (ngSubmit)="onSignup()" class="form" novalidate>
+        <h2>List your property for free</h2>
+        <p class="sub">Takes a minute. You’ll add your hostel details right after.</p>
+
+        <label class="field">
+          <span>Your full name</span>
+          <input type="text" [(ngModel)]="signupForm.full_name" name="full_name" autocomplete="name" placeholder="Ravi Sharma" />
+        </label>
+
+        <div class="row">
+          <label class="field">
+            <span>Phone</span>
+            <input type="tel" [(ngModel)]="signupForm.phone" name="phone" autocomplete="tel" placeholder="98765 43210" />
+          </label>
+          <label class="field">
+            <span>Email</span>
+            <input type="email" [(ngModel)]="signupForm.email" name="email" autocomplete="email" placeholder="you@yourhostel.com" />
+          </label>
+        </div>
+
+        <div class="row">
+          <label class="field">
+            <span>Password</span>
+            <input [type]="showPassword ? 'text' : 'password'" [(ngModel)]="signupForm.password" name="password"
+                   autocomplete="new-password" placeholder="At least 8 characters" />
+          </label>
+          <label class="field">
+            <span>Confirm password</span>
+            <input [type]="showPassword ? 'text' : 'password'" [(ngModel)]="signupForm.confirmPassword" name="confirmPassword"
+                   autocomplete="new-password" />
+          </label>
+        </div>
+
+        <label class="check">
+          <input type="checkbox" [(ngModel)]="showPassword" name="showPw1" /> Show passwords
+        </label>
+
+        <label class="check">
+          <input type="checkbox" [(ngModel)]="signupForm.agreed" name="agreed" />
+          I agree to the <a routerLink="/help">terms</a> and the listing policy
+        </label>
+
+        <p class="error" *ngIf="error" role="alert">{{ error }}</p>
+
+        <button type="submit" class="btn-main" [disabled]="loading">
+          {{ loading ? 'Creating your account…' : 'Create account and add my property' }}
+        </button>
+
+        <p class="switch">Already listed with us? <button type="button" (click)="switchTab('login')">Log in</button></p>
+      </form>
+
+      <!-- LOGIN -->
+      <form *ngIf="activeTab === 'login'" (ngSubmit)="onLogin()" class="form" novalidate>
+        <h2>Welcome back</h2>
+        <p class="sub">Log in to manage your listings and enquiries.</p>
+
+        <label class="field">
+          <span>Email</span>
+          <input type="email" [(ngModel)]="loginForm.email" name="email" autocomplete="username" placeholder="you@yourhostel.com" />
+        </label>
+
+        <label class="field">
+          <span>Password</span>
+          <div class="pw">
+            <input [type]="showPassword ? 'text' : 'password'" [(ngModel)]="loginForm.password" name="password"
+                   autocomplete="current-password" />
+            <button type="button" (click)="showPassword = !showPassword">{{ showPassword ? 'Hide' : 'Show' }}</button>
+          </div>
+        </label>
+
+        <label class="check">
+          <input type="checkbox" [(ngModel)]="loginForm.remember" name="remember" /> Keep me logged in on this device
+        </label>
+
+        <p class="error" *ngIf="error" role="alert">{{ error }}</p>
+
+        <button type="submit" class="btn-main" [disabled]="loading">
+          {{ loading ? 'Logging in…' : 'Log in to my dashboard' }}
+        </button>
+
+        <p class="switch">New here? <button type="button" (click)="switchTab('signup')">Create an owner account</button></p>
+      </form>
+
+    </div>
+  </section>
+</div>

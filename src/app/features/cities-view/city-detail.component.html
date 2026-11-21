@@ -1,0 +1,172 @@
+<!-- city-detail.component.html -->
+<div class="city-page">
+
+  <!-- ══════════ NOT FOUND ══════════ -->
+  <section class="city-not-found" *ngIf="notFound()">
+    <h1>We’re not in this city yet</h1>
+    <p>There are no hostels or PGs listed for “{{ slug() }}”. Try another city, or tell an owner you know to list for free.</p>
+    <div class="nf-actions">
+      <a routerLink="/cities" class="btn-solid">Browse all cities</a>
+      <a routerLink="/register-your-hostel" class="btn-line">List a property</a>
+    </div>
+  </section>
+
+  <ng-container *ngIf="!notFound()">
+
+    <!-- ══════════ HERO ══════════ -->
+    <header class="hero" [class.hero--loading]="loading()">
+      <div class="hero-media" *ngIf="city()?.banner_image_url as img" [style.backgroundImage]="'url(' + img + ')'"></div>
+      <div class="hero-shade"></div>
+
+      <div class="hero-inner">
+        <nav class="crumbs" aria-label="Breadcrumb">
+          <a routerLink="/">Home</a><span aria-hidden="true">/</span>
+          <a routerLink="/cities">Cities</a><span aria-hidden="true">/</span>
+          <span aria-current="page">{{ city()?.name || '…' }}</span>
+        </nav>
+
+        <ng-container *ngIf="city() as c; else heroSkeleton">
+          <h1 class="hero-city">{{ c.name }}</h1>
+          <p class="hero-line">Hostels &amp; PGs in {{ c.name }}<ng-container *ngIf="c.state">, {{ c.state }}</ng-container></p>
+          <p class="hero-desc" *ngIf="c.short_description">{{ c.short_description }}</p>
+
+          <dl class="hero-stats" *ngIf="stats() as s">
+            <div>
+              <dt>Stays listed</dt>
+              <dd>{{ s.total }}</dd>
+            </div>
+            <div *ngIf="s.verified">
+              <dt>Verified</dt>
+              <dd>{{ s.verified }}</dd>
+            </div>
+            <div *ngIf="s.from_price">
+              <dt>Beds from</dt>
+              <dd>₹{{ s.from_price | number:'1.0-0' }}<small>/month</small></dd>
+            </div>
+          </dl>
+        </ng-container>
+
+        <ng-template #heroSkeleton>
+          <div class="sk sk-title"></div>
+          <div class="sk sk-line"></div>
+        </ng-template>
+      </div>
+    </header>
+
+    <!-- ══════════ FILTER BAR ══════════ -->
+    <div class="filterbar" id="city-results" *ngIf="!loading() && !loadError()">
+      <div class="filterbar-inner">
+        <div class="filter-group" *ngIf="facets().types.length > 1" role="group" aria-label="Property type">
+          <button type="button" class="pill" [class.on]="!type()" (click)="type() && setType(type())">All</button>
+          <button type="button" class="pill" *ngFor="let t of facets().types"
+                  [class.on]="type() === t" [attr.aria-pressed]="type() === t" (click)="setType(t)">
+            {{ pretty(t) }}
+          </button>
+        </div>
+
+        <div class="filter-group" *ngIf="facets().genders.length > 1" role="group" aria-label="Who can stay">
+          <button type="button" class="pill" *ngFor="let g of facets().genders"
+                  [class.on]="gender() === g" [attr.aria-pressed]="gender() === g" (click)="setGender(g)">
+            {{ genderLabel(g) }}
+          </button>
+        </div>
+
+        <label class="sort">
+          <span>Sort</span>
+          <select [ngModel]="sort()" (ngModelChange)="setSort($event)">
+            <option *ngFor="let o of sortOptions" [value]="o.value">{{ o.label }}</option>
+          </select>
+        </label>
+      </div>
+    </div>
+
+    <!-- ══════════ RESULTS ══════════ -->
+    <main class="results">
+
+      <!-- first load -->
+      <div class="grid" *ngIf="loading()">
+        <div class="card card--sk" *ngFor="let s of [1, 2, 3, 4, 5, 6]">
+          <div class="card-img sk"></div>
+          <div class="card-body">
+            <div class="sk sk-row" style="width: 70%"></div>
+            <div class="sk sk-row" style="width: 45%"></div>
+            <div class="sk sk-row" style="width: 60%"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- error -->
+      <div class="state" *ngIf="!loading() && loadError()">
+        <h2>Listings didn’t load</h2>
+        <p>Check your internet connection and try again.</p>
+        <button type="button" class="btn-solid" (click)="retry()">Try again</button>
+      </div>
+
+      <ng-container *ngIf="!loading() && !loadError()">
+        <p class="count" *ngIf="pagination() as p">
+          <strong>{{ p.total }}</strong> {{ p.total === 1 ? 'stay' : 'stays' }}
+          <ng-container *ngIf="hasFilters()"> match your filters</ng-container>
+          <button type="button" class="link" *ngIf="hasFilters()" (click)="clearFilters()">Clear filters</button>
+        </p>
+
+        <!-- empty -->
+        <div class="state" *ngIf="!properties().length">
+          <ng-container *ngIf="hasFilters(); else noneAtAll">
+            <h2>Nothing matches those filters</h2>
+            <p>Try a different type or show everyone.</p>
+            <button type="button" class="btn-solid" (click)="clearFilters()">Clear filters</button>
+          </ng-container>
+          <ng-template #noneAtAll>
+            <h2>No stays in {{ city()?.name }} yet</h2>
+            <p>New hostels and PGs are added every week.</p>
+            <a routerLink="/register-your-hostel" class="btn-solid">List your property free</a>
+          </ng-template>
+        </div>
+
+        <!-- cards -->
+        <div class="grid" [class.grid--busy]="refreshing()" *ngIf="properties().length">
+          <a class="card" *ngFor="let p of properties()" [routerLink]="['/properties', p.id]">
+            <div class="card-img">
+              <img *ngIf="p.image; else noPic" [src]="p.image" [alt]="p.name" loading="lazy" />
+              <ng-template #noPic><span class="no-pic">Photos coming soon</span></ng-template>
+              <span class="badge" *ngIf="p.verified">✓ Verified</span>
+              <span class="photo-count" *ngIf="p.gallery.length > 1">{{ p.gallery.length }} photos</span>
+            </div>
+
+            <div class="card-body">
+              <div class="card-top">
+                <h3>{{ p.name }}</h3>
+                <span class="rating" *ngIf="p.reviews > 0">★ {{ p.rating }} <small>({{ p.reviews }})</small></span>
+                <span class="new" *ngIf="p.reviews === 0">New</span>
+              </div>
+              <p class="where">{{ p.location || p.city }}<ng-container *ngIf="p.distance"> — {{ p.distance }}</ng-container></p>
+
+              <ul class="facts">
+                <li *ngIf="p.type">{{ p.type }}</li>
+                <li *ngIf="p.gender">For {{ p.gender | lowercase }}</li>
+                <li *ngIf="foodLabel(p) as f">{{ f }}</li>
+                <li *ngIf="p.beds_available > 0" class="ok">{{ p.beds_available }} bed{{ p.beds_available === 1 ? '' : 's' }} free</li>
+              </ul>
+
+              <div class="card-foot">
+                <p class="price" *ngIf="p.price">₹{{ p.price | number:'1.0-0' }}<small>/month</small></p>
+                <p class="price muted" *ngIf="!p.price">Price on request</p>
+                <span class="go">View stay</span>
+              </div>
+            </div>
+          </a>
+        </div>
+
+        <!-- pagination -->
+        <nav class="pager" *ngIf="pagination() as p" aria-label="Pages">
+          <ng-container *ngIf="p.totalPages > 1">
+            <button type="button" [disabled]="p.page === 1" (click)="goToPage(p.page - 1)">Previous</button>
+            <button type="button" *ngFor="let n of pages()" class="num" [class.on]="n === p.page"
+                    [attr.aria-current]="n === p.page ? 'page' : null" (click)="goToPage(n)">{{ n }}</button>
+            <button type="button" [disabled]="p.page === p.totalPages" (click)="goToPage(p.page + 1)">Next</button>
+          </ng-container>
+        </nav>
+      </ng-container>
+    </main>
+  </ng-container>
+</div>

@@ -1,0 +1,173 @@
+<!-- find-hostel.html -->
+<div class="find-page">
+
+  <!-- ══════════ HERO: a city at night, windows switching on ══════════ -->
+  <header class="hero">
+    <div class="hero-inner">
+      <h1>Find a bed in the right part of town.</h1>
+      <p class="hero-sub">
+        Hostels and PGs across India — see the rent, the food and the house rules before you call.
+      </p>
+
+      <div class="rent-switch" role="tablist" aria-label="Rent type">
+        <button type="button" role="tab" [attr.aria-selected]="rentType() === 'monthly'"
+                [class.on]="rentType() === 'monthly'" (click)="switchRentType('monthly')">
+          Monthly stay
+        </button>
+        <button type="button" role="tab" [attr.aria-selected]="rentType() === 'daily'"
+                [class.on]="rentType() === 'daily'" (click)="switchRentType('daily')">
+          Daily stay
+        </button>
+      </div>
+    </div>
+
+    <div class="skyline" aria-hidden="true">
+      <span *ngFor="let b of skyline" class="tower" [style.height.px]="b.h">
+        <i *ngIf="b.lit" class="win" [style.--d]="b.d"></i>
+      </span>
+    </div>
+  </header>
+
+  <!-- ══════════ SEARCH CARD ══════════ -->
+  <section class="search-wrap">
+    <form class="search-card" (ngSubmit)="applyFilters()">
+      <label class="field field--wide">
+        <span>Area, college or hostel name</span>
+        <input type="search" [ngModel]="q()" (ngModelChange)="q.set($event); typed()" name="q"
+               placeholder="e.g. Belapur, Kharghar, Sunrise PG" autocomplete="off" />
+      </label>
+
+      <label class="field">
+        <span>City</span>
+        <select [ngModel]="citySlug()" (ngModelChange)="setCity($event)" name="city">
+          <option value="">All cities</option>
+          <option *ngFor="let c of cities()" [value]="c.slug">{{ c.name }}{{ c.count ? ' (' + c.count + ')' : '' }}</option>
+        </select>
+      </label>
+
+      <label class="field field--price">
+        <span>Budget per {{ rentType() === 'daily' ? 'day' : 'month' }}</span>
+        <div class="range">
+          <input type="number" min="0" inputmode="numeric" placeholder="Min ₹"
+                 [ngModel]="minPrice()" (ngModelChange)="minPrice.set($event || null); typed()" name="min" aria-label="Minimum price" />
+          <span aria-hidden="true">to</span>
+          <input type="number" min="0" inputmode="numeric" placeholder="Max ₹"
+                 [ngModel]="maxPrice()" (ngModelChange)="maxPrice.set($event || null); typed()" name="max" aria-label="Maximum price" />
+        </div>
+      </label>
+
+      <button type="submit" class="btn-search">Search</button>
+
+      <div class="chip-row" *ngIf="types().length > 1 || genders().length > 1">
+        <div class="chips" *ngIf="types().length > 1" role="group" aria-label="Property type">
+          <button type="button" class="chip" *ngFor="let t of types()"
+                  [class.on]="propertyType() === t" [attr.aria-pressed]="propertyType() === t" (click)="setType(t)">{{ pretty(t) }}</button>
+        </div>
+        <div class="chips" *ngIf="genders().length > 1" role="group" aria-label="Who can stay">
+          <button type="button" class="chip" *ngFor="let g of genders()"
+                  [class.on]="gender() === g" [attr.aria-pressed]="gender() === g" (click)="setGender(g)">{{ genderLabel(g) }}</button>
+        </div>
+      </div>
+    </form>
+  </section>
+
+  <!-- ══════════ RESULTS ══════════ -->
+  <main class="results" id="find-results">
+
+    <div class="results-head" *ngIf="!loading() && !failed() && pagination() as p">
+      <p>
+        <strong>{{ p.total }}</strong> {{ p.total === 1 ? 'stay' : 'stays' }}
+        <ng-container *ngIf="cityName()"> in {{ cityName() }}</ng-container>,
+        {{ rentType() === 'daily' ? 'daily rent' : 'monthly rent' }}
+        <button type="button" class="link" *ngIf="activeCount()" (click)="clearFilters()">Clear filters</button>
+      </p>
+      <label class="sort">
+        <span>Sort</span>
+        <select [ngModel]="sort()" (ngModelChange)="setSort($event)">
+          <option value="newest">Newest first</option>
+          <option value="price_low">Price: low to high</option>
+          <option value="price_high">Price: high to low</option>
+          <option value="rating">Top rated</option>
+        </select>
+      </label>
+    </div>
+
+    <!-- loading -->
+    <div class="grid" *ngIf="loading()">
+      <div class="card card--sk" *ngFor="let s of [1, 2, 3, 4, 5, 6]">
+        <div class="card-img sk"></div>
+        <div class="card-body">
+          <div class="sk sk-row" style="width: 70%"></div>
+          <div class="sk sk-row" style="width: 45%"></div>
+          <div class="sk sk-row" style="width: 60%"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- error -->
+    <div class="state" *ngIf="!loading() && failed()">
+      <h2>Search didn’t load</h2>
+      <p>Check your internet connection and try again.</p>
+      <button type="button" class="btn-solid" (click)="retry()">Try again</button>
+    </div>
+
+    <!-- empty -->
+    <div class="state" *ngIf="!loading() && !failed() && !properties().length">
+      <ng-container *ngIf="rentType() === 'daily' && !dailySupported(); else normalEmpty">
+        <h2>Daily stays are coming soon</h2>
+        <p>Owners haven’t added daily prices yet. Monthly stays are available right now.</p>
+        <button type="button" class="btn-solid" (click)="switchRentType('monthly')">Show monthly stays</button>
+      </ng-container>
+      <ng-template #normalEmpty>
+        <h2>No stays match that search</h2>
+        <p *ngIf="rentType() === 'daily'">Few places offer daily rent yet — try a wider budget or Monthly stay.</p>
+        <p *ngIf="rentType() === 'monthly'">Try a nearby area, a wider budget, or fewer filters.</p>
+        <button type="button" class="btn-solid" *ngIf="activeCount()" (click)="clearFilters()">Clear filters</button>
+      </ng-template>
+    </div>
+
+    <!-- cards -->
+    <div class="grid" [class.grid--busy]="refreshing()" *ngIf="!loading() && properties().length">
+      <a class="card" *ngFor="let p of properties()" [routerLink]="['/properties', p.id]">
+        <div class="card-img">
+          <img *ngIf="p.image; else noPic" [src]="p.image" [alt]="p.name" loading="lazy" />
+          <ng-template #noPic><span class="no-pic">Photos coming soon</span></ng-template>
+          <span class="badge" *ngIf="p.verified">✓ Verified</span>
+          <span class="photo-count" *ngIf="p.gallery.length > 1">{{ p.gallery.length }} photos</span>
+        </div>
+
+        <div class="card-body">
+          <div class="card-top">
+            <h3>{{ p.name }}</h3>
+            <span class="rating" *ngIf="p.reviews > 0">★ {{ p.rating }} <small>({{ p.reviews }})</small></span>
+            <span class="new" *ngIf="p.reviews === 0">New</span>
+          </div>
+          <p class="where">{{ p.location ? p.location + ', ' : '' }}{{ p.city }}</p>
+
+          <ul class="facts">
+            <li *ngIf="p.type">{{ p.type }}</li>
+            <li *ngIf="p.gender">For {{ p.gender | lowercase }}</li>
+            <li *ngIf="foodLabel(p) as f">{{ f }}</li>
+            <li *ngIf="p.beds_available > 0" class="ok">{{ p.beds_available }} bed{{ p.beds_available === 1 ? '' : 's' }} free</li>
+          </ul>
+
+          <div class="card-foot">
+            <p class="price" *ngIf="p.price">₹{{ p.price | number:'1.0-0' }}<small>/{{ priceUnit() }}</small></p>
+            <p class="price muted" *ngIf="!p.price">Price on request</p>
+            <span class="go">View stay</span>
+          </div>
+        </div>
+      </a>
+    </div>
+
+    <!-- pagination -->
+    <nav class="pager" *ngIf="!loading() && pagination() as p" aria-label="Pages">
+      <ng-container *ngIf="p.totalPages > 1">
+        <button type="button" [disabled]="p.page === 1" (click)="goToPage(p.page - 1)">Previous</button>
+        <button type="button" *ngFor="let n of pages()" class="num" [class.on]="n === p.page"
+                [attr.aria-current]="n === p.page ? 'page' : null" (click)="goToPage(n)">{{ n }}</button>
+        <button type="button" [disabled]="p.page === p.totalPages" (click)="goToPage(p.page + 1)">Next</button>
+      </ng-container>
+    </nav>
+  </main>
+</div>

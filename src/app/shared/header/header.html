@@ -1,0 +1,223 @@
+<header class="hk-header" [class.scrolled]="isScrolled" [attr.data-role]="role()">
+  <div class="hk-container">
+    <div class="hk-nav-wrapper">
+
+      <!-- ── LOGO ── -->
+      <a [routerLink]="isSuperAdmin() ? '/super-admin/overview' : '/home'" class="hk-logo" (click)="closeMenu()">
+        <div class="hk-logo-icon">
+          <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M6 15L18 5L30 15V31C30 31.55 29.55 32 29 32H23V24H13V32H7C6.45 32 6 31.55 6 31V15Z"
+                  fill="white" fill-opacity="0.15" stroke="white" stroke-width="1.8" stroke-linejoin="round"/>
+            <rect x="15" y="24" width="6" height="8" rx="1" fill="white" fill-opacity="0.9"/>
+            <circle cx="27" cy="10" r="4.5" stroke="#FF7A00" stroke-width="2" fill="none"/>
+            <line x1="30.5" y1="13.5" x2="33" y2="16" stroke="#FF7A00" stroke-width="2" stroke-linecap="round"/>
+            <circle cx="18" cy="18" r="1.2" fill="#FF7A00"/>
+          </svg>
+        </div>
+        <div class="hk-logo-text">
+          <div class="hk-logo-brand">
+            <span class="hk-logo-hostel">Hostel</span><span class="hk-logo-khojo">Khojo</span>
+            <span class="hk-logo-dot">●</span>
+          </div>
+          <span class="hk-logo-tagline">{{ isSuperAdmin() ? 'Admin console' : isOwner() ? 'Owner portal' : 'Across India' }}</span>
+        </div>
+      </a>
+
+      <!-- ── DESKTOP NAV (hidden for the super admin) ── -->
+      <nav class="hk-desktop-nav" *ngIf="!isSuperAdmin()">
+        <a routerLink="/home" routerLinkActive="active"
+           [routerLinkActiveOptions]="{exact: true}" class="hk-nav-link">Home</a>
+        <a routerLink="/find-hostel" routerLinkActive="active" class="hk-nav-link">Find Hostel</a>
+        <a routerLink="/cities" routerLinkActive="active" class="hk-nav-link">
+          Cities
+          <svg class="hk-nav-badge-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
+        </a>
+        <a routerLink="/services" routerLinkActive="active" class="hk-nav-link">Services</a>
+        <a routerLink="/contact" routerLinkActive="active" class="hk-nav-link">Contact</a>
+      </nav>
+      <div class="hk-desktop-nav hk-nav-spacer" *ngIf="isSuperAdmin()"></div>
+
+      <!-- ── RIGHT SIDE ── -->
+      <div class="hk-auth-section">
+
+        <!-- Main call to action changes with the role -->
+        <ng-container [ngSwitch]="role()">
+          <a *ngSwitchCase="'owner'" routerLink="/owner/dashboard" class="hk-list-btn">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path [attr.d]="icon.grid"/></svg>
+            <span>Owner dashboard</span>
+          </a>
+          <ng-container *ngSwitchCase="'superadmin'"></ng-container>
+          <a *ngSwitchDefault routerLink="/register-your-hostel" class="hk-list-btn">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path [attr.d]="icon.plus"/></svg>
+            <span>List Your Hostel</span>
+          </a>
+        </ng-container>
+
+        <!-- Guest -->
+        <div class="hk-auth-btns" *ngIf="!active()">
+          <span class="hk-role-chip guest" title="You are not signed in">
+            <span class="hk-role-dot"></span> Guest
+          </span>
+          <a routerLink="/login" class="hk-btn-login">Login</a>
+          <a routerLink="/register" class="hk-btn-signup">Sign Up</a>
+        </div>
+
+        <!-- Signed in: account button with the role under the name -->
+        <div class="hk-user-dropdown" *ngIf="active() as s">
+          <button type="button" class="hk-user-btn" [class.open]="userDropdownOpen"
+                  [attr.data-role]="s.role"
+                  (click)="toggleUserDropdown()"
+                  [attr.aria-expanded]="userDropdownOpen"
+                  aria-haspopup="menu">
+            <span class="hk-avatar" [attr.data-role]="s.role">
+              <img *ngIf="s.photo; else avatarInitial" [src]="s.photo" alt="" />
+              <ng-template #avatarInitial>{{ initial(s.name) }}</ng-template>
+            </span>
+            <span class="hk-user-info">
+              <span class="hk-user-name">{{ s.name }}</span>
+              <span class="hk-user-role" [attr.data-role]="s.role">{{ s.label }}</span>
+            </span>
+            <span class="hk-multi" *ngIf="others().length" [title]="'Also signed in as ' + others()[0].label">+{{ others().length }}</span>
+            <svg class="hk-chevron" [class.rotate]="userDropdownOpen" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="6 9 12 15 18 9"/>
+            </svg>
+          </button>
+
+          <div class="hk-dropdown" *ngIf="userDropdownOpen" role="menu">
+            <!-- Who you are -->
+            <div class="hk-dropdown-user-card" [attr.data-role]="s.role">
+              <span class="hk-dropdown-avatar" [attr.data-role]="s.role">
+                <img *ngIf="s.photo; else ddInitial" [src]="s.photo" alt="" />
+                <ng-template #ddInitial>{{ initial(s.name) }}</ng-template>
+              </span>
+              <div class="hk-dropdown-who">
+                <span class="hk-role-pill" [attr.data-role]="s.role">Signed in as {{ s.label }}</span>
+                <p class="hk-dropdown-name">{{ s.name }}</p>
+                <p class="hk-dropdown-email" *ngIf="s.email">{{ s.email }}</p>
+              </div>
+            </div>
+
+            <a *ngFor="let l of s.links" [routerLink]="l.link" class="hk-dropdown-item" role="menuitem" (click)="closeUserDropdown()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path [attr.d]="l.icon"/></svg>
+              {{ l.label }}
+            </a>
+
+            <button type="button" class="hk-dropdown-item hk-dropdown-logout" role="menuitem" (click)="signOut(s.role)">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+              Sign out as {{ s.label | lowercase }}
+            </button>
+
+            <!-- Other logins in this browser -->
+            <ng-container *ngIf="others().length">
+              <div class="hk-dropdown-sep"></div>
+              <p class="hk-dropdown-label">Also signed in</p>
+              <div class="hk-other" *ngFor="let o of others()" [attr.data-role]="o.role">
+                <a [routerLink]="o.home" class="hk-other-main" (click)="closeUserDropdown()">
+                  <span class="hk-mini-avatar" [attr.data-role]="o.role">{{ initial(o.name) }}</span>
+                  <span>
+                    <strong>{{ o.name }}</strong>
+                    <small>{{ o.label }}</small>
+                  </span>
+                </a>
+                <button type="button" class="hk-other-out" (click)="signOut(o.role)" [attr.aria-label]="'Sign out as ' + o.label">Sign out</button>
+              </div>
+            </ng-container>
+          </div>
+        </div>
+      </div><!-- /auth-section -->
+
+      <!-- ── HAMBURGER ── -->
+      <button class="hk-hamburger" (click)="toggleMenu()" [class.open]="isMenuOpen" aria-label="Toggle menu">
+        <span></span>
+        <span></span>
+        <span></span>
+        <i class="hk-ham-dot" *ngIf="active() as s" [attr.data-role]="s.role"></i>
+      </button>
+
+    </div><!-- /nav-wrapper -->
+  </div><!-- /container -->
+
+  <div class="hk-scroll-bar" [style.opacity]="isScrolled ? 1 : 0"></div>
+</header>
+
+<!-- ── MOBILE OVERLAY ── -->
+<div class="hk-mobile-overlay" [class.active]="isMenuOpen" (click)="closeMenu()"></div>
+
+<!-- ── MOBILE DRAWER ── -->
+<div class="hk-mobile-drawer" [class.active]="isMenuOpen">
+
+  <div class="hk-drawer-header">
+    <div class="hk-drawer-logo">
+      <span class="hk-logo-hostel">Hostel</span><span class="hk-logo-khojo">Khojo</span>
+    </div>
+    <button class="hk-drawer-close" (click)="closeMenu()" aria-label="Close menu">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+  </div>
+
+  <nav class="hk-drawer-nav">
+
+    <!-- Who you are, always first -->
+    <div class="hk-drawer-user-card" [attr.data-role]="role()">
+      <ng-container *ngIf="active() as s; else drawerGuest">
+        <span class="hk-drawer-avatar" [attr.data-role]="s.role">
+          <img *ngIf="s.photo; else drInitial" [src]="s.photo" alt="" />
+          <ng-template #drInitial>{{ initial(s.name) }}</ng-template>
+        </span>
+        <div>
+          <span class="hk-role-pill" [attr.data-role]="s.role">{{ s.label }}</span>
+          <p class="hk-drawer-user-name">{{ s.name }}</p>
+        </div>
+      </ng-container>
+      <ng-template #drawerGuest>
+        <span class="hk-drawer-avatar guest">?</span>
+        <div>
+          <span class="hk-role-pill" data-role="guest">Guest</span>
+          <p class="hk-drawer-user-name">You’re not signed in</p>
+        </div>
+      </ng-template>
+    </div>
+
+    <ng-container *ngIf="!isSuperAdmin()">
+      <p class="hk-drawer-section-label">Explore</p>
+      <a routerLink="/home" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="hk-drawer-link" (click)="closeMenu()"><span class="hk-drawer-link-icon">🏠</span> Home</a>
+      <a routerLink="/find-hostel" routerLinkActive="active" class="hk-drawer-link" (click)="closeMenu()"><span class="hk-drawer-link-icon">🔍</span> Find Hostel</a>
+      <a routerLink="/cities" routerLinkActive="active" class="hk-drawer-link" (click)="closeMenu()"><span class="hk-drawer-link-icon">🌆</span> Cities</a>
+      <a routerLink="/services" routerLinkActive="active" class="hk-drawer-link" (click)="closeMenu()"><span class="hk-drawer-link-icon">⚡</span> Services</a>
+      <a routerLink="/contact" routerLinkActive="active" class="hk-drawer-link" (click)="closeMenu()"><span class="hk-drawer-link-icon">📞</span> Contact</a>
+    </ng-container>
+
+    <div class="hk-drawer-cta-wrap" *ngIf="role() === 'guest' || role() === 'tenant'">
+      <a routerLink="/register-your-hostel" class="hk-drawer-cta" (click)="closeMenu()">List Your Hostel — It's Free</a>
+    </div>
+
+    <!-- Guest -->
+    <ng-container *ngIf="!active()">
+      <div class="hk-drawer-sep"></div>
+      <p class="hk-drawer-section-label">Account</p>
+      <a routerLink="/login" class="hk-drawer-link" (click)="closeMenu()"><span class="hk-drawer-link-icon">🔐</span> Login</a>
+      <a routerLink="/register" class="hk-drawer-link hk-drawer-signup" (click)="closeMenu()"><span class="hk-drawer-link-icon">✨</span> Create Account</a>
+    </ng-container>
+
+    <!-- One block per signed-in role -->
+    <ng-container *ngFor="let s of sessions()">
+      <div class="hk-drawer-sep"></div>
+      <p class="hk-drawer-section-label">{{ s.label }} · {{ s.name }}</p>
+      <a *ngFor="let l of s.links" [routerLink]="l.link" routerLinkActive="active" class="hk-drawer-link" (click)="closeMenu()">
+        <svg class="hk-drawer-svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path [attr.d]="l.icon"/></svg>
+        {{ l.label }}
+      </a>
+      <button class="hk-drawer-link hk-drawer-logout" (click)="signOut(s.role)">
+        <span class="hk-drawer-link-icon">🚪</span> Sign out as {{ s.label | lowercase }}
+      </button>
+    </ng-container>
+  </nav>
+
+  <div class="hk-drawer-footer">
+    <p>© 2025 HostelKhojo · Made in 🇮🇳 India</p>
+  </div>
+</div>

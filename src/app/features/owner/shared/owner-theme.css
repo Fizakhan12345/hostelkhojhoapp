@@ -1,0 +1,88 @@
+/* features/owner/shared/owner-theme.css — shared by owner dashboard pages */
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+
+:host {
+  --night: #12142B;
+  --dusk: #23275E;
+  --amber: #FFB547;
+  --saffron: #FF7A00;
+  --mist: #C9CCE8;
+  --paper: #F6F5FB;
+  --ink: #1B1D3A;
+  --muted: #6A6E8F;
+  --line: #DDDFF0;
+  --ok: #1F7A4D;
+  --ok-bg: #E6F4EC;
+  --warn: #9A5B00;
+  --warn-bg: #FFF2DC;
+  --danger: #C0352B;
+  --danger-bg: #FCEBE9;
+  display: block;
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  color: var(--ink);
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+h1, h2, h3 { font-family: 'Bricolage Grotesque', sans-serif; letter-spacing: -0.02em; color: var(--ink); }
+h1 { font-size: clamp(1.8rem, 3vw, 2.4rem); font-weight: 800; margin: 0; }
+h2 { font-size: 1.35rem; font-weight: 700; margin: 0 0 0.75rem; }
+h3 { font-size: 1.05rem; font-weight: 700; margin: 0; }
+
+.lead { margin: 0.4rem 0 0; color: var(--muted); max-width: 60ch; line-height: 1.55; }
+
+.surface {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 1.4rem;
+}
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.45rem;
+  padding: 0.75rem 1.2rem;
+  border-radius: 10px;
+  border: 1.5px solid transparent;
+  font: inherit; font-weight: 700; font-size: 0.93rem;
+  cursor: pointer; text-decoration: none;
+  transition: background 0.15s, border-color 0.15s;
+}
+.btn:focus-visible { outline: 3px solid var(--saffron); outline-offset: 2px; }
+.btn:disabled { opacity: 0.55; cursor: not-allowed; }
+.btn-main { background: var(--saffron); color: #fff; }
+.btn-main:hover:not(:disabled) { background: #E86E00; }
+.btn-dark { background: var(--dusk); color: #fff; }
+.btn-dark:hover:not(:disabled) { background: var(--night); }
+.btn-ghost { background: #fff; border-color: var(--line); color: var(--ink); }
+.btn-ghost:hover:not(:disabled) { border-color: var(--dusk); }
+
+.notice { padding: 0.85rem 1rem; border-radius: 10px; font-size: 0.92rem; line-height: 1.5; margin: 0 0 1rem; }
+.notice.error { background: var(--danger-bg); color: var(--danger); }
+.notice.ok { background: var(--ok-bg); color: var(--ok); }
+.notice.warn { background: var(--warn-bg); color: var(--warn); }
+
+.tag { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 6px; font-size: 0.78rem; font-weight: 700; }
+.tag.ok { background: var(--ok-bg); color: var(--ok); }
+.tag.warn { background: var(--warn-bg); color: var(--warn); }
+.tag.off { background: #EEEEF4; color: var(--muted); }
+
+.skeleton {
+  border-radius: 12px; min-height: 64px; margin-bottom: 0.75rem;
+  background: linear-gradient(90deg, #ECEDF5 25%, #F5F5FA 50%, #ECEDF5 75%);
+  background-size: 200% 100%; animation: shimmer 1.3s infinite;
+}
+@keyframes shimmer { to { background-position: -200% 0; } }
+@media (prefers-reduced-motion: reduce) { .skeleton { animation: none; } }
+
+/* form controls */
+.field { display: grid; gap: 0.4rem; }
+.field > span { font-size: 0.88rem; font-weight: 600; color: var(--ink); }
+.field small { color: var(--muted); font-size: 0.8rem; }
+.field input, .field select, .field textarea {
+  width: 100%; padding: 0.75rem 0.85rem;
+  border: 1.5px solid var(--line); border-radius: 10px; background: #fff;
+  font: inherit; font-size: 0.95rem; color: var(--ink); outline: none;
+}
+.field textarea { resize: vertical; min-height: 96px; line-height: 1.5; }
+.field input:focus, .field select:focus, .field textarea:focus { border-color: var(--dusk); box-shadow: 0 0 0 3px rgba(35, 39, 94, 0.12); }
+.req { color: var(--saffron); }

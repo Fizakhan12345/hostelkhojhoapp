@@ -1,0 +1,89 @@
+<div class="booking-page">
+  <div class="container">
+
+    <div class="state-msg" *ngIf="loading()">Loading\u2026</div>
+    <div class="state-msg error" *ngIf="error() && !property()">{{ error() }}</div>
+
+    <ng-container *ngIf="property() as p">
+
+      <!-- ── Success screen ─────────────────────────────── -->
+      <div class="success-card" *ngIf="success() as s">
+        <div class="success-icon">\u2713</div>
+        <h1>Enquiry Sent!</h1>
+        <p class="success-ref">Booking Reference: <strong>{{ s.booking_ref }}</strong></p>
+        <div class="reach-banner">\u23f1\ufe0f We will reach you within 2 hours.</div>
+        <p class="success-copy">
+          We\u2019ve notified the property owner about your interest in <strong>{{ p.name }}</strong>.
+          You\u2019ll also receive a confirmation email shortly.
+        </p>
+        <div class="success-actions">
+          <a routerLink="/properties" class="btn-secondary">Browse More Properties</a>
+          <a routerLink="/" class="btn-primary">Back to Home</a>
+        </div>
+      </div>
+
+      <!-- ── Booking form ───────────────────────────────── -->
+      <div class="booking-layout" *ngIf="!success()">
+        <div class="breadcrumb">
+          <a routerLink="/">Home</a> <span>/</span>
+          <a [routerLink]="['/properties', p.id]">{{ p.name }}</a> <span>/</span>
+          <span class="current">Book</span>
+        </div>
+
+        <h1>Confirm Your Booking Enquiry</h1>
+
+        <div class="booking-grid">
+          <form class="booking-form" (ngSubmit)="submit()">
+            <div class="field">
+              <label>Room Type</label>
+              <select [(ngModel)]="selectedRoomId" name="room" required>
+                <option *ngFor="let room of p.rooms" [value]="room.id" [disabled]="room.available < 1">
+                  {{ room.room_type }} \u2014 \u20b9{{ room.price_per_bed | number }}/month
+                  {{ room.available < 1 ? '(Full)' : '' }}
+                </option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label>Check-in Date</label>
+              <input type="date" [(ngModel)]="checkInDate" name="checkInDate" required />
+            </div>
+
+            <div class="field">
+              <label>Duration (months)</label>
+              <input type="number" [(ngModel)]="durationMonths" name="duration" min="1" max="24" required />
+            </div>
+
+            <p class="form-error" *ngIf="error()">{{ error() }}</p>
+
+            <button type="submit" class="btn-submit" [disabled]="submitting() || !selectedRoomId">
+              {{ submitting() ? 'Sending Enquiry\u2026' : 'Send Booking Enquiry' }}
+            </button>
+            <p class="form-note">\u23f1\ufe0f We\u2019ll reach you within 2 hours of submitting this enquiry.</p>
+          </form>
+
+          <aside class="summary-card">
+            <img [src]="p.images?.[0]?.image_url" [alt]="p.name" />
+            <div class="summary-body">
+              <h3>{{ p.name }}</h3>
+              <p class="summary-location">\ud83d\udccd {{ p.area }}, {{ p.city }}</p>
+              <div class="summary-line" *ngIf="selectedRoom as r">
+                <span>Room</span><span>{{ r.room_type }}</span>
+              </div>
+              <div class="summary-line" *ngIf="selectedRoom as r">
+                <span>Monthly Rent</span><span>\u20b9{{ r.price_per_bed | number }}</span>
+              </div>
+              <div class="summary-line">
+                <span>Security Deposit</span><span>\u20b9{{ p.security_deposit | number }}</span>
+              </div>
+              <div class="summary-line total" *ngIf="selectedRoom as r">
+                <span>Payable Now</span>
+                <span>\u20b9{{ (r.price_per_bed + p.security_deposit) | number }}</span>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </ng-container>
+  </div>
+</div>

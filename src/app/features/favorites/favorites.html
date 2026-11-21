@@ -1,0 +1,77 @@
+<div class="lists-page">
+  <div class="lists-hero">
+    <div class="container">
+      <h1>Saved Hostels</h1>
+      <p *ngIf="!loading()">
+        {{ saved().length }} {{ saved().length === 1 ? 'hostel' : 'hostels' }} saved
+      </p>
+      <p *ngIf="loading()">Your shortlist, all in one place</p>
+    </div>
+  </div>
+
+  <div class="container lists-body">
+
+    <p class="alert error" *ngIf="error()">
+      ⚠️ {{ error() }}
+      <button class="link-btn" (click)="load()">Try again</button>
+    </p>
+
+    <!-- Skeleton -->
+    <div class="grid" *ngIf="loading()">
+      <div class="card skeleton" *ngFor="let s of [1,2,3]">
+        <div class="card-img shimmer"></div>
+        <div class="card-body">
+          <div class="line shimmer" style="width: 70%"></div>
+          <div class="line shimmer" style="width: 45%"></div>
+          <div class="line shimmer" style="width: 35%"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty -->
+    <div class="empty" *ngIf="!loading() && !error() && saved().length === 0">
+      <div class="empty-icon">♡</div>
+      <h2>No saved hostels yet</h2>
+      <p>Tap the heart on any hostel to save it here and compare later.</p>
+      <a routerLink="/find-hostel" class="btn-primary">Find Hostels</a>
+    </div>
+
+    <!-- List -->
+    <div class="grid" *ngIf="!loading() && saved().length">
+      <a class="card" *ngFor="let item of saved()"
+         [routerLink]="[detailRoute, item.propertyId]">
+
+        <div class="card-img">
+          <img *ngIf="item.property.image; else noImg" [src]="item.property.image" [alt]="item.property.name" loading="lazy" />
+          <ng-template #noImg><div class="no-img">🏠</div></ng-template>
+
+          <button class="remove-btn" type="button"
+                  [disabled]="removing().has(item.propertyId)"
+                  (click)="remove(item, $event)"
+                  aria-label="Remove from saved" title="Remove from saved">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2">
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+            </svg>
+          </button>
+
+          <span class="tag" *ngIf="item.property.gender">{{ item.property.gender | titlecase }}</span>
+        </div>
+
+        <div class="card-body">
+          <h3>{{ item.property.name }}</h3>
+          <p class="location" *ngIf="item.property.location">📍 {{ item.property.location }}</p>
+
+          <div class="card-foot">
+            <p class="price" *ngIf="item.property.price; else noPrice">
+              ₹{{ item.property.price | number:'1.0-0' }}<span>/month</span>
+            </p>
+            <ng-template #noPrice><p class="price muted">Price on request</p></ng-template>
+            <span class="view">View →</span>
+          </div>
+          <p class="saved-on" *ngIf="item.savedAt">Saved {{ item.savedAt | date:'d MMM y' }}</p>
+        </div>
+      </a>
+    </div>
+
+  </div>
+</div>

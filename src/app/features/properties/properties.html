@@ -1,0 +1,362 @@
+<!-- properties.html -->
+<div class="properties-page" style="margin-top: 20px;">
+
+  <!-- ============ DARK HERO HEADER ============ -->
+  <div class="properties-header">
+    <div class="header-glow"></div>
+    <div class="header-inner">
+      <span class="header-eyebrow">◆ DISCOVER</span>
+      <h1 class="header-title">Find Your Next Stay</h1>
+      <p class="header-description" *ngIf="!loading()">
+        <ng-container *ngIf="searchQuery(); else allText">
+          {{ filteredProperties().length }} stay{{ filteredProperties().length === 1 ? '' : 's' }} matching “{{ searchQuery() }}”.
+        </ng-container>
+        <ng-template #allText>
+          {{ properties().length }} broker-free hostels and PGs — what you see is what you rent.
+        </ng-template>
+      </p>
+      <p class="header-description" *ngIf="loading()">Loading stays…</p>
+
+      <div class="header-searchbar">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" class="search-icon">
+          <circle cx="9" cy="9" r="6.5" stroke="currentColor" stroke-width="1.6"/>
+          <path d="M17 17l-3.2-3.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+        </svg>
+        <input
+          type="text"
+          class="search-input"
+          placeholder="Search by name, area, city or facility (e.g. Belapur, WiFi)…"
+          [ngModel]="searchQuery()"
+          (ngModelChange)="searchQuery.set($event)"
+        />
+        <button class="search-btn" *ngIf="searchQuery()" (click)="searchQuery.set('')">Clear</button>
+      </div>
+
+      <div class="header-stats">
+        <div class="stat-pill">
+          <span class="stat-number">{{ properties().length }}</span>
+          <span class="stat-label">Properties</span>
+        </div>
+        <div class="stat-pill">
+          <span class="stat-number">{{ verifiedCount() }}</span>
+          <span class="stat-label">Verified</span>
+        </div>
+        <div class="stat-pill">
+          <span class="stat-number">{{ bedsFree() }}</span>
+          <span class="stat-label">Beds free</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ FILTER / SORT TOOLBAR ============ -->
+  <div class="toolbar">
+    <div class="toolbar-inner">
+      <div class="category-chips">
+        <button
+          class="chip"
+          *ngFor="let category of categories"
+          [class.active]="selectedCategory() === category"
+          (click)="selectCategory(category)"
+        >
+          {{ category }}
+          <span class="chip-count">{{ countForCategory(category) }}</span>
+        </button>
+      </div>
+
+      <div class="toolbar-right">
+        <div class="sort-control">
+          <label for="sortBy">Sort</label>
+          <select id="sortBy" [ngModel]="sortBy()" (ngModelChange)="sortBy.set($event)">
+            <option *ngFor="let opt of sortOptions" [value]="opt.value">{{ opt.label }}</option>
+          </select>
+        </div>
+        <button class="clear-btn" *ngIf="searchQuery() || selectedCategory() !== 'All'" (click)="clearFilters()">
+          Reset
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ PROPERTIES LIST ============ -->
+  <div class="properties-container">
+
+    <!-- Loading -->
+    <div class="properties-list" *ngIf="loading()">
+      <div class="property-item skeleton-item" *ngFor="let s of [1, 2, 3]">
+        <div></div>
+        <div class="image-wrapper skeleton"></div>
+        <div class="property-content">
+          <div class="skeleton sk-line" style="width: 40%"></div>
+          <div class="skeleton sk-line big" style="width: 70%"></div>
+          <div class="skeleton sk-line" style="width: 55%"></div>
+          <div class="skeleton sk-line" style="width: 85%"></div>
+        </div>
+        <div class="property-sidebar skeleton" style="min-height: 220px"></div>
+      </div>
+    </div>
+
+    <!-- Could not load -->
+    <div class="empty-state" *ngIf="!loading() && loadError()">
+      <h3>We couldn’t load stays right now</h3>
+      <p>Check your internet connection and try again.</p>
+      <button class="btn btn-primary reset-btn" (click)="loadProperties()">Try again</button>
+    </div>
+
+    <!-- Real listings -->
+    <div class="properties-list" *ngIf="!loading() && !loadError()">
+      <div
+        class="property-item"
+        *ngFor="let property of filteredProperties(); let i = index; trackBy: trackByPropertyId"
+        (click)="viewPropertyDetails(property.id)"
+        (keyup.enter)="viewPropertyDetails(property.id)"
+        tabindex="0"
+        role="link"
+        [attr.aria-label]="property.name"
+        [class.is-featured]="property.featured"
+        [style.animation-delay]="i * 0.06 + 's'"
+      >
+        <!-- Property Number -->
+        <div class="property-number">
+          <span>{{ (i + 1).toString().padStart(2, '0') }}</span>
+        </div>
+
+        <!-- Property Image -->
+        <div class="property-image-section">
+          <div class="image-wrapper">
+            <img *ngIf="property.image; else noPhoto" [src]="property.image" [alt]="property.name" class="property-image" loading="lazy" />
+            <ng-template #noPhoto>
+              <div class="no-photo"><span>🏠</span>Photos coming soon</div>
+            </ng-template>
+
+            <div class="image-overlay">
+              <button
+                class="overlay-btn wishlist-btn"
+                [class.is-active]="isWishlisted(property.id)"
+                [attr.aria-label]="isWishlisted(property.id) ? 'Remove from saved hostels' : 'Save hostel'"
+                (click)="toggleWishlist($event, property)"
+              >
+                <svg width="20" height="20" viewBox="0 0 20 20" [attr.fill]="isWishlisted(property.id) ? 'currentColor' : 'none'">
+                  <path d="M10 17.5s-7-4-7-9.5a3.5 3.5 0 0 1 7-0.5 3.5 3.5 0 0 1 7 0.5c0 5.5-7 9.5-7 9.5z" stroke="currentColor" stroke-width="1.5"/>
+                </svg>
+              </button>
+              <span class="image-count" *ngIf="property.gallery.length > 1">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2zM2 6v6a2 2 0 0 0 2 2h6v2H4a4 4 0 0 1-4-4V6h2z"/>
+                </svg>
+                {{ property.gallery.length }}
+              </span>
+            </div>
+
+            <div class="property-badges">
+              <span class="badge featured" *ngIf="property.featured">
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
+                  <path d="M6 1l1.5 3.5L11 5l-2.5 2.5L9 11l-3-2-3 2 .5-3.5L1 5l3.5-.5L6 1z"/>
+                </svg>
+                Featured
+              </span>
+              <span class="badge verified" *ngIf="property.verified">
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                  <path d="M10 3L4.5 8.5L2 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+                Verified
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Property Content -->
+        <div class="property-content">
+          <div class="property-meta">
+            <span class="property-category" [attr.data-category]="property.category">{{ property.category }}</span>
+            <ng-container *ngIf="property.type">
+              <span class="meta-separator">·</span>
+              <span class="property-type">{{ property.type }}</span>
+            </ng-container>
+            <span class="property-posted" *ngIf="postedAgo(property)">{{ postedAgo(property) }}</span>
+          </div>
+
+          <h2 class="property-name">{{ property.name }}</h2>
+
+          <div class="property-location">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path d="M7 13s-5-3.5-5-7.5a5 5 0 1 1 10 0c0 4-5 7.5-5 7.5z" stroke="currentColor" stroke-width="1.5"/>
+              <circle cx="7" cy="5.5" r="1.5" fill="currentColor"/>
+            </svg>
+            <span class="location-text">{{ place(property) }}</span>
+          </div>
+
+          <p class="property-description" *ngIf="property.description">{{ property.description }}</p>
+
+          <!-- PG facts instead of sq ft / BHK -->
+          <div class="property-features">
+            <div class="feature-item">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <rect x="2" y="2" width="12" height="12" stroke="currentColor" stroke-width="1.5"/>
+                <path d="M2 6h12M6 2v12" stroke="currentColor" stroke-width="1.5"/>
+              </svg>
+              <span>{{ property.room_count }} room type{{ property.room_count === 1 ? '' : 's' }}</span>
+            </div>
+            <div class="feature-item">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <rect x="2" y="7" width="12" height="5" rx="1" stroke="currentColor" stroke-width="1.5"/>
+                <path d="M3 7V4h4v3M3 12v2M13 12v2" stroke="currentColor" stroke-width="1.5"/>
+              </svg>
+              <span>{{ property.beds_available }} bed{{ property.beds_available === 1 ? '' : 's' }} free</span>
+            </div>
+            <div class="feature-item">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M3 2v5a2 2 0 0 0 4 0V2M5 2v12M11 2c-1.5 1-2 3-2 5h2v7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              </svg>
+              <span>{{ foodLabel(property) }}</span>
+            </div>
+            <div class="feature-item" *ngIf="property.has_ac">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M8 2v12M3 5l10 6M13 5L3 11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              </svg>
+              <span>AC rooms</span>
+            </div>
+          </div>
+
+          <div class="property-tags" *ngIf="property.amenities.length">
+            <span class="tag" *ngFor="let tag of property.amenities.slice(0, 4)">{{ tag }}</span>
+            <span class="tag-more" *ngIf="property.amenities.length > 4">+{{ property.amenities.length - 4 }}</span>
+          </div>
+
+          <div class="property-distance" *ngIf="property.distance">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <circle cx="7" cy="7" r="6" stroke="currentColor" stroke-width="1.5"/>
+              <path d="M7 3.5v3.5l2 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+            <span>{{ property.distance }}</span>
+          </div>
+
+          <div class="property-rating" *ngIf="property.reviews > 0">
+            <div class="stars">
+              <svg *ngFor="let star of getStarArray(property.rating)" width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
+                <path d="M7 1l1.5 3.5L12 5l-2.5 2.5L10 11l-3-2-3 2 .5-3.5L2 5l3.5-.5L7 1z"/>
+              </svg>
+              <svg *ngIf="hasHalfStar(property.rating)" width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
+                <path d="M7 1l1.5 3.5L12 5l-2.5 2.5L10 11l-3-2v-9z"/>
+              </svg>
+            </div>
+            <span class="rating-value">{{ property.rating }}</span>
+            <span class="rating-reviews">({{ property.reviews }} review{{ property.reviews === 1 ? '' : 's' }})</span>
+          </div>
+          <span class="new-listing" *ngIf="property.reviews === 0">New listing · no reviews yet</span>
+        </div>
+
+        <!-- Property Sidebar -->
+        <div class="property-sidebar">
+          <div class="price-section">
+            <div class="price-wrapper">
+              <span class="price-label">Rent per bed</span>
+              <div class="price-container" *ngIf="property.price">
+                <span class="current-price">₹{{ property.price | number:'1.0-0' }}</span>
+              </div>
+              <div class="price-container" *ngIf="!property.price">
+                <span class="price-on-request">Price on request</span>
+              </div>
+              <span class="price-period">{{ property.room_count > 1 ? 'starting, per month' : 'per month' }}</span>
+            </div>
+
+            <div class="availability-badge" [class.immediate]="property.beds_available > 0">
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                <circle cx="6" cy="6" r="5" stroke="currentColor" stroke-width="1.5"/>
+                <path d="M6 3v3l2 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              </svg>
+              {{ property.beds_available > 0 ? 'Beds available now' : 'Currently full' }}
+            </div>
+          </div>
+
+          <div class="owner-info" *ngIf="property.owner_name">
+            <img *ngIf="property.owner_image; else ownerFallback" [src]="property.owner_image" [alt]="property.owner_name" class="owner-avatar" />
+            <ng-template #ownerFallback><span class="owner-avatar owner-initial">{{ ownerInitial(property) }}</span></ng-template>
+            <div class="owner-details">
+              <span class="owner-label">Owner</span>
+              <span class="owner-name">{{ property.owner_name }}</span>
+            </div>
+          </div>
+
+          <div class="action-buttons">
+            <button class="btn btn-primary" (click)="scheduleVisit($event, property)">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <rect x="2" y="3" width="12" height="11" rx="1" stroke="currentColor" stroke-width="1.5"/>
+                <path d="M5 1v3M11 1v3M2 6h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              </svg>
+              View &amp; Book
+            </button>
+            <button class="btn btn-secondary" (click)="contactOwner($event, property)">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M2 3h12a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z" stroke="currentColor" stroke-width="1.5"/>
+                <path d="M1 4l7 5 7-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              </svg>
+              Ask on WhatsApp
+            </button>
+          </div>
+
+          <div class="quick-stats">
+            <div class="stat-row">
+              <span class="stat-label">For</span>
+              <span class="stat-value">{{ property.gender || 'N/A' }}</span>
+            </div>
+            <div class="stat-row" *ngIf="property.room_types.length">
+              <span class="stat-label">Rooms</span>
+              <span class="stat-value">{{ property.room_types.slice(0, 2).join(', ') }}<ng-container *ngIf="property.room_types.length > 2"> +{{ property.room_types.length - 2 }}</ng-container></span>
+            </div>
+            <div class="stat-row" *ngIf="property.deposit">
+              <span class="stat-label">Deposit</span>
+              <span class="stat-value">₹{{ property.deposit | number:'1.0-0' }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- No listings in the database yet -->
+    <div class="empty-state" *ngIf="!loading() && !loadError() && properties().length === 0">
+      <svg width="120" height="120" viewBox="0 0 120 120" fill="none">
+        <circle cx="60" cy="60" r="50" stroke="#3A3A6E" stroke-width="2" stroke-dasharray="4 4"/>
+        <path d="M60 40v40M40 60h40" stroke="#F97316" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <h3>No stays listed yet</h3>
+      <p>New hostels and PGs are added every week. Own one? List it free.</p>
+      <a class="btn btn-primary reset-btn" href="/register-your-hostel">List your property</a>
+    </div>
+
+    <!-- Filters match nothing -->
+    <div class="empty-state" *ngIf="!loading() && !loadError() && properties().length > 0 && filteredProperties().length === 0">
+      <svg width="120" height="120" viewBox="0 0 120 120" fill="none">
+        <circle cx="60" cy="60" r="50" stroke="#3A3A6E" stroke-width="2" stroke-dasharray="4 4"/>
+        <path d="M60 40v40M40 60h40" stroke="#F97316" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <h3>No stays match “{{ searchQuery() || selectedCategory() }}”</h3>
+      <p>Try a nearby area or city, or reset the filters to see all {{ properties().length }} stays.</p>
+      <button class="btn btn-primary reset-btn" (click)="clearFilters()">Reset filters</button>
+    </div>
+  </div>
+
+  <!-- WhatsApp floating action -->
+  <a
+    class="whatsapp-fab"
+    [href]="whatsappLink"
+    target="_blank"
+    rel="noopener noreferrer"
+    aria-label="Chat with us on WhatsApp"
+  >
+    <svg viewBox="0 0 24 24">
+      <path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.39 1.26 4.81L2 22l5.42-1.36a9.9 9.9 0 0 0 4.62 1.14h.01c5.46 0 9.9-4.45 9.9-9.91 0-2.65-1.03-5.14-2.9-7.01A9.87 9.87 0 0 0 12.04 2zm0 18.06c-1.5 0-2.97-.4-4.25-1.16l-.3-.18-3.16.83.84-3.08-.2-.32a8.05 8.05 0 0 1-1.24-4.3c0-4.46 3.63-8.09 8.11-8.09a8.06 8.06 0 0 1 8.1 8.09c0 4.46-3.63 8.11-8.1 8.11zm4.44-6.07c-.24-.12-1.44-.71-1.66-.79-.22-.08-.39-.12-.55.12-.16.24-.63.79-.78.95-.14.16-.29.18-.53.06-.24-.12-1.02-.38-1.95-1.21-.72-.64-1.21-1.44-1.35-1.68-.14-.24-.02-.37.11-.49.11-.11.24-.28.36-.42.12-.14.16-.24.24-.4.08-.16.04-.3-.02-.42-.06-.12-.55-1.33-.76-1.82-.2-.48-.4-.41-.55-.42-.14-.01-.3-.01-.46-.01a.9.9 0 0 0-.65.3c-.22.24-.85.83-.85 2.03s.87 2.36 1 2.52c.12.16 1.7 2.6 4.13 3.64.58.25 1.03.4 1.38.51.58.18 1.11.16 1.53.1.47-.07 1.44-.59 1.64-1.16.2-.57.2-1.06.14-1.16-.06-.1-.22-.16-.46-.28z"/>
+    </svg>
+  </a>
+
+  <!-- Toast notifications -->
+  <div class="toast-stack" aria-live="polite">
+    <div class="toast" *ngFor="let toast of toasts()">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/>
+        <path d="M5 8l2 2 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span>{{ toast.message }}</span>
+    </div>
+  </div>
+</div>

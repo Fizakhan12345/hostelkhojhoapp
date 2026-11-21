@@ -1,0 +1,90 @@
+<div class="settings-page">
+  <div class="settings-hero">
+    <div class="container">
+      <h1>Settings</h1>
+      <p>Manage your account and security</p>
+    </div>
+  </div>
+
+  <div class="container settings-body" *ngIf="auth.currentUser() as user">
+
+    <div class="toast-wrap">
+      <p class="toast success" *ngIf="successMsg()">✅ {{ successMsg() }}</p>
+      <p class="toast error" *ngIf="errorMsg()">⚠️ {{ errorMsg() }}</p>
+    </div>
+
+    <!-- Account -->
+    <section class="card">
+      <h2>Account</h2>
+      <div class="account-row">
+        <div class="avatar">
+          <img *ngIf="user.profile_pic; else init" [src]="user.profile_pic" alt="" />
+          <ng-template #init>{{ initial }}</ng-template>
+        </div>
+        <div class="account-info">
+          <p class="name">{{ user.full_name }}</p>
+          <p class="muted">{{ user.email }} · {{ user.phone }}</p>
+        </div>
+        <a routerLink="/profile" class="btn-outline">Edit Profile</a>
+      </div>
+
+      <div class="quick-links">
+        <a routerLink="/favorites" class="quick-link">❤️ Saved Hostels</a>
+        <a routerLink="/bookings" class="quick-link">📋 My Bookings</a>
+      </div>
+    </section>
+
+    <!-- Change password -->
+    <section class="card">
+      <h2>Change Password</h2>
+      <form (ngSubmit)="changePassword()" class="form">
+        <div class="field">
+          <label>Current password</label>
+          <input [type]="showPw ? 'text' : 'password'" [(ngModel)]="pw.current" name="current" autocomplete="current-password" />
+        </div>
+        <div class="field">
+          <label>New password</label>
+          <input [type]="showPw ? 'text' : 'password'" [(ngModel)]="pw.next" name="next" autocomplete="new-password" />
+          <span class="hint">At least 8 characters</span>
+        </div>
+        <div class="field">
+          <label>Confirm new password</label>
+          <input [type]="showPw ? 'text' : 'password'" [(ngModel)]="pw.confirm" name="confirm" autocomplete="new-password" />
+        </div>
+
+        <label class="check">
+          <input type="checkbox" [(ngModel)]="showPw" name="showPw" /> Show passwords
+        </label>
+
+        <button type="submit" class="btn-primary" [disabled]="savingPw()">
+          <span *ngIf="!savingPw()">Update Password</span>
+          <span *ngIf="savingPw()"><span class="spinner"></span> Updating…</span>
+        </button>
+      </form>
+    </section>
+
+    <!-- Danger zone -->
+    <section class="card danger">
+      <h2>Deactivate Account</h2>
+      <p class="muted">Your account will be disabled and you won't be able to log in. Your bookings are kept on record.</p>
+
+      <button class="btn-danger-outline" *ngIf="!confirmDeactivate" (click)="confirmDeactivate = true">
+        Deactivate my account
+      </button>
+
+      <div *ngIf="confirmDeactivate" class="confirm-box">
+        <div class="field">
+          <label>Enter your password to confirm</label>
+          <input type="password" [(ngModel)]="deactivatePassword" name="deactivatePassword" />
+        </div>
+        <div class="confirm-actions">
+          <button class="btn-outline" (click)="cancelDeactivate()">Cancel</button>
+          <button class="btn-danger" (click)="deactivate()" [disabled]="deactivating()">
+            {{ deactivating() ? 'Deactivating…' : 'Yes, deactivate' }}
+          </button>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</div>
